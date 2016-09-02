@@ -7,7 +7,7 @@ public class PlayerInputs : MonoBehaviour {
     #region SETUP
 
     private Transform _transform;
-    private PlayerInputs _inputs;
+    //private PlayerInputs _inputs;
 
     public PlayerController Player
     {
@@ -18,7 +18,9 @@ public class PlayerInputs : MonoBehaviour {
         set
         {
             if (value == null)
+            {
                 ActivateControls(false);
+            }
             else
             {
                 ActivateControls(true);
@@ -66,13 +68,14 @@ public class PlayerInputs : MonoBehaviour {
     void Update () {
         if (Input.GetMouseButton(0))
         {
-            clickPosition = transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * _transform.position.z)); //getting target position for player
-
+            clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
             if (Input.GetMouseButtonDown(0)){ // first frame touching
-
+                _player.OnTouchingStart(clickPosition);
             }
+            else
+                _player.OnTouchingStay(clickPosition);
         }
-	}
+    }
 
     #endregion
 }

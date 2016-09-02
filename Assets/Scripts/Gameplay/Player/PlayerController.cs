@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour {
     // Use this for initialization
     void Start()
     {
-        movementVector = Vector2.down + Vector2.right;
+        
     }
 
     private Vector2 tempVector;
@@ -70,8 +70,10 @@ public class PlayerController : MonoBehaviour {
                         _transform.Translate(tempVector);
                     }
                 }
-                else /*if(Vector2.Angle(hit.normal, Vector2.up) == 0f)*/ // grounded flat
+                else
+                { /*if(Vector2.Angle(hit.normal, Vector2.up) == 0f)*/ // grounded flat
                     _transform.position = hit.centroid;
+                }
             }
             else
                 _transform.Translate(movementVector * Time.deltaTime);
@@ -97,9 +99,14 @@ public class PlayerController : MonoBehaviour {
 
     #region MOVING
 
-    public void OnTouching(Vector2 target)
+    public void OnTouchingStart(Vector2 target)
     {
+        movementVector = (target - (Vector2)_transform.position).normalized;
+    }
 
+    public void OnTouchingStay(Vector2 target)
+    {
+        movementVector = (target - (Vector2)_transform.position).normalized;
     }
 
     #endregion
