@@ -7,13 +7,15 @@ public class PlayerController : MonoBehaviour {
 
     private Transform _transform;
     private BoxCollider2D _collider;
+	private Rigidbody2D _rigidbody2D;
 
-    // Use this for initialization
-    void Awake()
+	// Use this for initialization
+	void Awake()
     {
         _transform = GetComponent<Transform>();
         _collider = GetComponent<BoxCollider2D>();
-    }
+		_rigidbody2D = GetComponent<Rigidbody2D>();
+	}
 
     // Use this for initialization
     void Start()
@@ -36,11 +38,36 @@ public class PlayerController : MonoBehaviour {
 
     private Vector2 movementAnchor;
     private Vector2 movementVector;
-    private Vector2 previousPosition;
+
+    private Vector2 positionBeforeJump;
+	private Vector2 positionTargetJump;
+	private int jumpTime = 1;
+	private float jumpTimer = 0;
+
+	private bool isJumping = false;
 
     // Update is called once per frame
     void Update()
     {
+
+		if (isJumping)
+		{
+			jumpTimer += Time.deltaTime;
+
+			float pourcent = jumpTimer / jumpTime;
+
+			Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+			transitionPosition.y += 4 * Mathf.Sin(Mathf.PI * pourcent);
+
+			_transform.position = transitionPosition;
+
+			if (jumpTimer >= jumpTime)
+			{
+				isJumping = false;
+			}
+		}
+
+		/*
         if(movementVector.magnitude > 0f) // if you must, move it!
         {
             hit = Physics2D.BoxCast((Vector2)_transform.position, _collider.size, 0f, movementVector, movementVector.magnitude * Time.deltaTime, groundCastLayer);
@@ -71,13 +98,15 @@ public class PlayerController : MonoBehaviour {
                     }
                 }
                 else
-                { /*if(Vector2.Angle(hit.normal, Vector2.up) == 0f)*/ // grounded flat
+                { 
+				//if(Vector2.Angle(hit.normal, Vector2.up) == 0f) // grounded flat
                     _transform.position = hit.centroid;
                 }
             }
             else
                 _transform.Translate(movementVector * Time.deltaTime);
         }
+		*/
     }
 
     #endregion
@@ -94,15 +123,38 @@ public class PlayerController : MonoBehaviour {
         
     }
 
-    #endregion
+	#endregion
 
 
-    #region MOVING
+	#region MOVING
 
-    public void OnTouchingStart(Vector2 target)
+	public float floatHeight;
+	public float liftForce;
+	public float damping;
+	public Rigidbody2D rb2D;
+
+	public void OnTouchingStart(Vector2 target)
     {
-        movementVector = (target - (Vector2)_transform.position).normalized;
-    }
+		if (!isJumping)
+		{
+			isJumping = true;
+			jumpTimer = 0;
+
+			RaycastHit2D hit = Physics2D.Raycast(new Vector2(target.x, 30), -Vector2.up);
+			if (hit.collider != null && hit.transform.tag == "ground")
+			{
+				positionTargetJump = hit.point;
+				positionTargetJump.y += 1;
+				//movementVector = (correctTarget - (Vector2)_transform.position).normalized;
+			}
+			else
+			{
+				positionTargetJump = new Vector2(target.x, _transform.position.y);
+			}
+
+			positionBeforeJump = _transform.position;
+		}
+	}
 
     public void OnTouchingStay(Vector2 target)
     {
