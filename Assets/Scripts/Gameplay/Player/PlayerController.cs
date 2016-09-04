@@ -1,71 +1,100 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour
+{
 
-    #region SETUP
+	#region SETUP
 
-    private Transform _transform;
-    private BoxCollider2D _collider;
+	private Transform _transform;
+	private BoxCollider2D _collider;
 	private Rigidbody2D _rigidbody2D;
 
 	// Use this for initialization
 	void Awake()
-    {
-        _transform = GetComponent<Transform>();
-        _collider = GetComponent<BoxCollider2D>();
+	{
+		_transform = GetComponent<Transform>();
+		_collider = GetComponent<BoxCollider2D>();
 		_rigidbody2D = GetComponent<Rigidbody2D>();
 	}
 
-    // Use this for initialization
-    void Start()
-    {
-        
-    }
+	// Use this for initialization
+	void Start()
+	{
 
-    private Vector2 tempVector;
-    private float tempFloat;
-    private int tempInt;
+	}
 
-    #endregion
+	private Vector2 tempVector;
+	private float tempFloat;
+	private int tempInt;
+
+	#endregion
 
 
-    #region UPDATE + PHYSICS
+	#region UPDATE + PHYSICS
 
-    [SerializeField]
-    private LayerMask groundCastLayer;
-    private RaycastHit2D hit;
+	[SerializeField]
+	private LayerMask groundCastLayer;
+	private RaycastHit2D hit;
 
-    private Vector2 movementAnchor;
-    private Vector2 movementVector;
+	private Vector2 movementAnchor;
+	private Vector2 movementVector;
 
-    private Vector2 positionBeforeJump;
+	private Vector2 positionBeforeJump;
 	private Vector2 positionTargetJump;
-	private int jumpTime = 1;
+	private float jumpTime = 1;
 	private float jumpTimer = 0;
 
 	private bool isJumping = false;
+	private bool isFalling = false;
 
-    // Update is called once per frame
-    void Update()
-    {
-
+	private float redresTime = 0.3f;
+	private float redresTimer = 0;
+	private Quaternion lastRotation = Quaternion.identity;
+	// Update is called once per frame
+	void Update()
+	{
+		//action de saut physiqué
 		if (isJumping)
 		{
 			jumpTimer += Time.deltaTime;
 
+			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 20, 0.2f, 0.8f);
+
 			float pourcent = jumpTimer / jumpTime;
 
 			Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-			transitionPosition.y += 4 * Mathf.Sin(Mathf.PI * pourcent);
+			transitionPosition.y += Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 2, 2, 10) * Mathf.Sin(Mathf.PI * pourcent);
 
-			_transform.position = transitionPosition;
+			_rigidbody2D.MovePosition(transitionPosition);
 
 			if (jumpTimer >= jumpTime)
 			{
 				isJumping = false;
+				_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
 			}
 		}
+		//redresse le lapin pour qu'il reste debout
+		else if(_rigidbody2D.rotation > 35 || _rigidbody2D.rotation < -35 || isFalling && !isJumping)
+		{
+			if (!isFalling)
+			{
+				redresTimer = 0;
+				lastRotation = _transform.rotation;
+			}
+
+			_rigidbody2D.rotation = Quaternion.Lerp(lastRotation, Quaternion.identity, redresTimer/redresTime).eulerAngles.z;
+			redresTimer += Time.deltaTime;
+
+			isFalling = _rigidbody2D.rotation != 0;
+		}
+
+		Debug.Log(_transform.rotation);
+
+		//_transform.rotation = Quaternion.Lerp(_transform.rotation, Quaternion.identity, 0.5f);
+
+		//_rigidbody2D.angularVelocity -= Time.deltaTime;
+		//_rigidbody2D.MoveRotation(0);
 
 		/*
         if(movementVector.magnitude > 0f) // if you must, move it!
@@ -107,21 +136,21 @@ public class PlayerController : MonoBehaviour {
                 _transform.Translate(movementVector * Time.deltaTime);
         }
 		*/
-    }
+	}
 
-    #endregion
+	#endregion
 
 
-    #region PUNCHING!
+	#region PUNCHING!
 
-    public void OnPunching(bool rightPunch)
-    {
-        Punch();
-    }
-    public void Punch()
-    {
-        
-    }
+	public void OnPunching(bool rightPunch)
+	{
+		Punch();
+	}
+	public void Punch()
+	{
+
+	}
 
 	#endregion
 
@@ -134,7 +163,7 @@ public class PlayerController : MonoBehaviour {
 	public Rigidbody2D rb2D;
 
 	public void OnTouchingStart(Vector2 target)
-    {
+	{
 		if (!isJumping)
 		{
 			isJumping = true;
@@ -153,23 +182,30 @@ public class PlayerController : MonoBehaviour {
 			}
 
 			positionBeforeJump = _transform.position;
+
+			if (positionBeforeJump.x < positionTargetJump.x) {
+				_transform.localScale = new Vector3(1, _transform.localScale.y, _transform.localScale.z);
+			} 
+			else {
+				_transform.localScale = new Vector3(-1, _transform.localScale.y, _transform.localScale.z);
+			}
 		}
 	}
 
-    public void OnTouchingStay(Vector2 target)
-    {
-        movementVector = (target - (Vector2)_transform.position).normalized;
-    }
+	public void OnTouchingStay(Vector2 target)
+	{
+		movementVector = (target - (Vector2)_transform.position).normalized;
+	}
 
-    #endregion
+	#endregion
 
 
-    #region TRIGGER REACTIONS
+	#region TRIGGER REACTIONS
 
-    void OnTriggerEnter2D(Collider2D co)
-    {
-        Debug.Log(co.name);
-    }
+	void OnTriggerEnter2D(Collider2D co)
+	{
+		Debug.Log(co.name);
+	}
 
-    #endregion
+	#endregion
 }
