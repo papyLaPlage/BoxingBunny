@@ -8,14 +8,14 @@ public class PlayerController : MonoBehaviour
 
 	private Transform _transform;
 	private BoxCollider2D _collider;
-	private Rigidbody2D _rigidbody2D;
+	//private Rigidbody2D _rigidbody2D;
 
 	// Use this for initialization
 	void Awake()
 	{
 		_transform = GetComponent<Transform>();
 		_collider = GetComponent<BoxCollider2D>();
-		_rigidbody2D = GetComponent<Rigidbody2D>();
+		//_rigidbody2D = GetComponent<Rigidbody2D>();
 	}
 
 	// Use this for initialization
@@ -61,21 +61,23 @@ public class PlayerController : MonoBehaviour
 
 			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 20, 0.2f, 0.8f);
 
-			float pourcent = jumpTimer / jumpTime;
+			float pourcent = Mathf.Min(1, jumpTimer / jumpTime);
 
 			Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
 			transitionPosition.y += Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 2, 2, 10) * Mathf.Sin(Mathf.PI * pourcent);
 
-			_rigidbody2D.MovePosition(transitionPosition);
 
-			if (jumpTimer >= jumpTime)
-			{
-				isJumping = false;
-				_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
-			}
+			_transform.position = transitionPosition;
+			//_rigidbody2D.MovePosition(transitionPosition);
+
+				if (jumpTimer >= jumpTime)
+				{
+					isJumping = false;
+					//_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
+				}
 		}
 		//redresse le lapin pour qu'il reste debout
-		else if(_rigidbody2D.rotation > 35 || _rigidbody2D.rotation < -35 || isFalling && !isJumping)
+		else if(_transform.rotation.eulerAngles.z > 35 || _transform.rotation.eulerAngles.z < -35 || isFalling && !isJumping)
 		{
 			if (!isFalling)
 			{
@@ -83,13 +85,12 @@ public class PlayerController : MonoBehaviour
 				lastRotation = _transform.rotation;
 			}
 
-			_rigidbody2D.rotation = Quaternion.Lerp(lastRotation, Quaternion.identity, redresTimer/redresTime).eulerAngles.z;
+			_transform.rotation = Quaternion.Lerp(lastRotation, Quaternion.identity, redresTimer/redresTime);
 			redresTimer += Time.deltaTime;
 
-			isFalling = _rigidbody2D.rotation != 0;
+			isFalling = _transform.rotation.eulerAngles.z != 0;
 		}
 
-		Debug.Log(_transform.rotation);
 
 		//_transform.rotation = Quaternion.Lerp(_transform.rotation, Quaternion.identity, 0.5f);
 
@@ -157,10 +158,7 @@ public class PlayerController : MonoBehaviour
 
 	#region MOVING
 
-	public float floatHeight;
-	public float liftForce;
-	public float damping;
-	public Rigidbody2D rb2D;
+	public LayerMask mask;
 
 	public void OnTouchingStart(Vector2 target)
 	{
@@ -168,12 +166,14 @@ public class PlayerController : MonoBehaviour
 		{
 			isJumping = true;
 			jumpTimer = 0;
+			
 
-			RaycastHit2D hit = Physics2D.Raycast(new Vector2(target.x, 30), -Vector2.up);
-			if (hit.collider != null && hit.transform.tag == "ground")
+			RaycastHit2D hit = Physics2D.Linecast(target, target + Vector2.down * 30, mask.value);
+			if (hit.collider != null)
 			{
+				Debug.Log(mask.value);
 				positionTargetJump = hit.point;
-				positionTargetJump.y += 1;
+				positionTargetJump.y += 0.75f;
 				//movementVector = (correctTarget - (Vector2)_transform.position).normalized;
 			}
 			else
