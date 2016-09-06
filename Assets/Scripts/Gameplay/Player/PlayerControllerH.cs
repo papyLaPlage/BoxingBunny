@@ -67,12 +67,15 @@ public class PlayerControllerH : MonoBehaviour
 			if (jumpTimer >= jumpTime)
 			{
 				isJumping = false;
-				_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
+				//_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
 			}
 		}
 		//redresse le lapin pour qu'il reste debout
 		else if (_rigidbody2D.rotation > 35 || _rigidbody2D.rotation < -35 || isFalling && !isJumping)
 		{
+			Debug.Log(_rigidbody2D.rotation);
+
+
 			if (!isFalling)
 			{
 				redresTimer = 0;
@@ -113,7 +116,11 @@ public class PlayerControllerH : MonoBehaviour
 			isJumping = true;
 			jumpTimer = 0;
 
-			RaycastHit2D hit = Physics2D.Linecast(target, target - Vector2.down * 10, groundCastLayer);
+			_rigidbody2D.velocity = Vector2.zero;
+			_rigidbody2D.angularVelocity = 0;
+			_rigidbody2D.rotation = 0;
+
+			RaycastHit2D hit = Physics2D.Linecast(target, target + Vector2.down * 10, groundCastLayer);
 			if (hit.collider != null && hit.transform.tag == "ground")
 			{
 				positionTargetJump = hit.point;
