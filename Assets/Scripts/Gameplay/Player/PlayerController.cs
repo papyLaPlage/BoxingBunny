@@ -171,7 +171,6 @@ public class PlayerController : MonoBehaviour
 			RaycastHit2D hit = Physics2D.Linecast(target, target + Vector2.down * 30, mask.value);
 			if (hit.collider != null)
 			{
-				Debug.Log(mask.value);
 				positionTargetJump = hit.point;
 				positionTargetJump.y += 0.75f;
 				//movementVector = (correctTarget - (Vector2)_transform.position).normalized;
