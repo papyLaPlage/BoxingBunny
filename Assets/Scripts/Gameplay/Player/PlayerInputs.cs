@@ -56,7 +56,7 @@ public class PlayerInputs : MonoBehaviour
 
 	public void OnPunchClicked(bool rightPunch)
 	{
-		_player.OnPunching(rightPunch);
+		//_player.OnPunching(rightPunch);
 	}
 
 	#endregion
