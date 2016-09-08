@@ -52,8 +52,10 @@ public class PlayerInputsH : MonoBehaviour
 
 	#region BUTTON INPUTS
 
+	bool test = false;
 	public void OnPunchClicked(bool rightPunch)
 	{
+		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControllerH>();
 		_player.OnPunching(rightPunch);
 	}
 
@@ -68,13 +70,19 @@ public class PlayerInputsH : MonoBehaviour
 	{
 		if (Input.GetMouseButton(0))
 		{
+			if (test)
+				Debug.Log(test);
+			test = false;
+
 			clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
 			if (Input.GetMouseButtonDown(0))
 			{ // first frame touching
 				_player.OnTouchingStart(clickPosition);
 			}
 			else
+			{
 				_player.OnTouchingStay(clickPosition);
+			}
 		}
 	}
 

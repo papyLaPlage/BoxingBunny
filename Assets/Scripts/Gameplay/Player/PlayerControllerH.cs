@@ -71,6 +71,7 @@ public class PlayerControllerH : MonoBehaviour
 			}
 		}
 		//redresse le lapin pour qu'il reste debout
+		/*
 		else if (_rigidbody2D.rotation > 35 || _rigidbody2D.rotation < -35 || isFalling && !isJumping)
 		{
 			Debug.Log(_rigidbody2D.rotation);
@@ -87,7 +88,7 @@ public class PlayerControllerH : MonoBehaviour
 
 			isFalling = _rigidbody2D.rotation != 0;
 		}
-
+		*/
 	}
 
 	#endregion
@@ -97,8 +98,10 @@ public class PlayerControllerH : MonoBehaviour
 
 	public void OnPunching(bool rightPunch)
 	{
+		Flip(rightPunch);
 		Punch();
 	}
+
 	public void Punch()
 	{
 
@@ -117,8 +120,8 @@ public class PlayerControllerH : MonoBehaviour
 			jumpTimer = 0;
 
 			_rigidbody2D.velocity = Vector2.zero;
-			_rigidbody2D.angularVelocity = 0;
-			_rigidbody2D.rotation = 0;
+			//_rigidbody2D.angularVelocity = 0;
+			//_rigidbody2D.rotation = 0;
 
 			RaycastHit2D hit = Physics2D.Linecast(target, target + Vector2.down * 10, groundCastLayer);
 			if (hit.collider != null && hit.transform.tag == "ground")
@@ -133,15 +136,14 @@ public class PlayerControllerH : MonoBehaviour
 
 			positionBeforeJump = _transform.position;
 
-			if (positionBeforeJump.x < positionTargetJump.x)
-			{
-				_transform.localScale = new Vector3(1, _transform.localScale.y, _transform.localScale.z);
-			}
-			else
-			{
-				_transform.localScale = new Vector3(-1, _transform.localScale.y, _transform.localScale.z);
-			}
+			Flip(positionBeforeJump.x < positionTargetJump.x);
 		}
+	}
+
+	private void Flip(bool right)
+	{
+		int direction = right ? 1 : -1;
+		_transform.localScale = new Vector3(direction, _transform.localScale.y, _transform.localScale.z);
 	}
 
 	public void OnTouchingStay(Vector2 target)
