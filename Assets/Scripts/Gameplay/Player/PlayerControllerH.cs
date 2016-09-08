@@ -30,10 +30,6 @@ public class PlayerControllerH : MonoBehaviour
 
 	#region UPDATE + PHYSICS
 
-	[SerializeField]
-	private LayerMask groundCastLayer;
-	private RaycastHit2D hit;
-
 	private Vector2 positionBeforeJump;
 	private Vector2 positionTargetJump;
 
@@ -67,6 +63,7 @@ public class PlayerControllerH : MonoBehaviour
 			if (jumpTimer >= jumpTime)
 			{
 				isJumping = false;
+				_rigidbody2D.position = positionTargetJump;
 				//_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
 			}
 		}
@@ -112,6 +109,10 @@ public class PlayerControllerH : MonoBehaviour
 
 	#region MOVING
 
+	[SerializeField]
+	private LayerMask groundCastLayer;
+	private RaycastHit2D hitRight, hitLeft;
+
 	public void OnTouchingStart(Vector2 target)
 	{
 		if (!isJumping)
@@ -123,20 +124,52 @@ public class PlayerControllerH : MonoBehaviour
 			//_rigidbody2D.angularVelocity = 0;
 			//_rigidbody2D.rotation = 0;
 
-			RaycastHit2D hit = Physics2D.Linecast(target, target + Vector2.down * 10, groundCastLayer);
-			if (hit.collider != null && hit.transform.tag == "ground")
+
+			Vector2 targetDown = target + Vector2.down * 10;
+			Vector2 VectorRight = Vector2.right * 0.5f;
+			Vector2 VectorLeft = Vector2.left * 0.5f;
+
+			hitRight = Physics2D.Linecast(target + VectorRight, targetDown + VectorRight, groundCastLayer);
+			hitLeft = Physics2D.Linecast(target + VectorLeft, targetDown + VectorLeft, groundCastLayer);
+
+			float positionTargetJumpRight;
+
+			if (hitRight.collider != null && hitRight.transform.tag == "ground")
 			{
-				positionTargetJump = hit.point;
-				positionTargetJump.y += 1;
+				positionTargetJumpRight = hitRight.point.y;
 			}
 			else
 			{
-				positionTargetJump = new Vector2(target.x, _transform.position.y - 3);
+				positionTargetJumpRight = _transform.position.y - 3;
+			}
+
+			float positionTargetJumpLeft;
+
+			if (hitLeft.collider != null && hitLeft.transform.tag == "ground")
+			{
+				positionTargetJumpLeft = hitLeft.point.y;
+			}
+			else
+			{
+				positionTargetJumpLeft = _transform.position.y - 3;
 			}
 
 			positionBeforeJump = _transform.position;
 
+			positionTargetJump.x = target.x;
+			positionTargetJump.y = positionTargetJumpRight > positionTargetJumpLeft ? positionTargetJumpRight : positionTargetJumpLeft;
+			positionTargetJump.y += 0.7f;
+
 			Flip(positionBeforeJump.x < positionTargetJump.x);
+
+#if UNITY_EDITOR
+			gizLineA = target + VectorRight;
+			gizLineB.x = gizLineA.x;
+			gizLineB.y = hitRight.point.y;
+			gizLineC = target + VectorLeft;
+			gizLineD.x = gizLineC.x;
+			gizLineD.y = hitLeft.point.y;
+#endif
 		}
 	}
 
@@ -162,4 +195,20 @@ public class PlayerControllerH : MonoBehaviour
 	}
 
 	#endregion
+
+#if UNITY_EDITOR
+
+	Vector2 gizLineA;
+	Vector2 gizLineB;
+	Vector2 gizLineC;
+	Vector2 gizLineD;
+	void OnDrawGizmos()
+	{
+		Gizmos.DrawLine(gizLineA, gizLineB);
+		Gizmos.DrawLine(gizLineC, gizLineD);
+
+		Gizmos.DrawLine(positionTargetJump + Vector2.right, positionTargetJump + Vector2.left);
+		
+	}
+#endif
 }
