@@ -36,56 +36,74 @@ public class PlayerControllerH : MonoBehaviour
 	private float jumpTime = 1;
 	private float jumpTimer = 0;
 
-	private bool isJumping = false;
-	private bool isFalling = false;
+	private enum States
+	{
+		Grounded,
+		Jumping,
+		Falling
+	}
+
+	private States state = States.Falling;
 
 	private float redresTime = 0.3f;
 	private float redresTimer = 0;
 	private Quaternion lastRotation = Quaternion.identity;
 
+	[SerializeField]
+	private LayerMask groundCastLayer;
 
-	void Update()
+	private Collider2D[] colliders;
+	void FixedUpdate()
 	{
-		//action de saut physiqué
-		if (isJumping)
+		switch (state)
 		{
+			case States.Falling:
+			case States.Grounded:
+
+			_rigidbody2D.gravityScale = 2;
+			state = States.Falling;
+
+			colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.down * 0.75f, 0.5f, groundCastLayer);
+			for (int i = 0; i < colliders.Length; i++)
+			{
+				if (colliders[i].gameObject != gameObject)
+					state = States.Grounded;
+			}
+
+			break;
+
+			case States.Jumping:
+
+			_rigidbody2D.gravityScale = 0;
+
 			jumpTimer += Time.deltaTime;
-
-			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 20, 0.2f, 0.8f);
-
-			float pourcent = jumpTimer / jumpTime;
-
-			Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-			transitionPosition.y += Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 2, 2, 10) * Mathf.Sin(Mathf.PI * pourcent);
-
-			_rigidbody2D.MovePosition(transitionPosition);
-
+			
 			if (jumpTimer >= jumpTime)
 			{
-				isJumping = false;
+				state = States.Falling;
 				_rigidbody2D.position = positionTargetJump;
-				//_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
+				_rigidbody2D.velocity = Vector2.down * 20f;
 			}
-		}
-		//redresse le lapin pour qu'il reste debout
-		/*
-		else if (_rigidbody2D.rotation > 35 || _rigidbody2D.rotation < -35 || isFalling && !isJumping)
-		{
-			Debug.Log(_rigidbody2D.rotation);
-
-
-			if (!isFalling)
+			else
 			{
-				redresTimer = 0;
-				lastRotation = _transform.rotation;
+				float pourcent = jumpTimer / jumpTime;
+
+				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+				transitionPosition.y += Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 2, 2, 10) * Mathf.Sin(Mathf.PI * pourcent);
+
+				_rigidbody2D.MovePosition(transitionPosition);
+
+				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
+				for (int i = 0; i < colliders.Length; i++)
+				{
+					if (colliders[i].gameObject != gameObject)
+						state = States.Falling;
+				}
 			}
 
-			_rigidbody2D.rotation = Quaternion.Lerp(lastRotation, Quaternion.identity, redresTimer / redresTime).eulerAngles.z;
-			redresTimer += Time.deltaTime;
+			break;
 
-			isFalling = _rigidbody2D.rotation != 0;
 		}
-		*/
 	}
 
 	#endregion
@@ -109,23 +127,16 @@ public class PlayerControllerH : MonoBehaviour
 
 	#region MOVING
 
-	[SerializeField]
-	private LayerMask groundCastLayer;
 	private RaycastHit2D hitRight, hitLeft;
 
 	public void OnTouchingStart(Vector2 target)
 	{
-		if (!isJumping)
+		if (state == States.Grounded)
 		{
-			isJumping = true;
+			state = States.Jumping;
 			jumpTimer = 0;
 
-			_rigidbody2D.velocity = Vector2.zero;
-			//_rigidbody2D.angularVelocity = 0;
-			//_rigidbody2D.rotation = 0;
-
-
-			Vector2 targetDown = target + Vector2.down * 10;
+			Vector2 targetDown = target + Vector2.down * 1;
 			Vector2 VectorRight = Vector2.right * 0.5f;
 			Vector2 VectorLeft = Vector2.left * 0.5f;
 
@@ -140,7 +151,7 @@ public class PlayerControllerH : MonoBehaviour
 			}
 			else
 			{
-				positionTargetJumpRight = _transform.position.y - 3;
+				positionTargetJumpRight = _transform.position.y;
 			}
 
 			float positionTargetJumpLeft;
@@ -151,16 +162,18 @@ public class PlayerControllerH : MonoBehaviour
 			}
 			else
 			{
-				positionTargetJumpLeft = _transform.position.y - 3;
+				positionTargetJumpLeft = _transform.position.y;
 			}
 
 			positionBeforeJump = _transform.position;
 
 			positionTargetJump.x = target.x;
 			positionTargetJump.y = positionTargetJumpRight > positionTargetJumpLeft ? positionTargetJumpRight : positionTargetJumpLeft;
-			positionTargetJump.y += 0.7f;
+			positionTargetJump.y += 1.4f;
 
 			Flip(positionBeforeJump.x < positionTargetJump.x);
+
+			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 20, 0.2f, 0.8f);
 
 #if UNITY_EDITOR
 			gizLineA = target + VectorRight;
@@ -189,10 +202,22 @@ public class PlayerControllerH : MonoBehaviour
 
 	#region TRIGGER REACTIONS
 
-	void OnTriggerEnter2D(Collider2D co)
+	/*void OnTriggerStay2D(Collider2D co)
 	{
-		Debug.Log(co.name);
-	}
+		if (co.tag == "ground")
+		{
+			state = States.Grounded;
+		}
+	}*/
+
+	/*void OnTriggerExit2D(Collider2D co)
+	{
+		Debug.Log("Exit: " + co.tag);
+		if (co.tag == "ground" && state != States.Jumping)
+		{
+			state = States.Falling;
+		}
+	}*/
 
 	#endregion
 
