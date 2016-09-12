@@ -5,6 +5,10 @@ public class Plateforme : MonoBehaviour
 {
 	private Transform _transforme;
 	private Vector2 originePosition;
+	//pour calculer le déplacement effectuer à donner aux objets sur la plateforme
+	private Vector2 lastPosition;
+
+	private ArrayList objetsToSupport = new ArrayList();
 
 	private uint nextPoint, pointsLength;
 
@@ -70,6 +74,7 @@ public class Plateforme : MonoBehaviour
 	{
 		if (stopTimer <= 0)
 		{
+			lastPosition = _transforme.position;
 
 			switch (comportent)
 			{
@@ -90,7 +95,7 @@ public class Plateforme : MonoBehaviour
 				break;
 
 				case Comportement.GoAndTeleport:
-				
+
 				if (nextPoint == 0 || nextPoint == pointsLength - 1 && inverseDirection)
 				{
 					_transforme.position = points[nextPoint];
@@ -109,7 +114,12 @@ public class Plateforme : MonoBehaviour
 				break;
 			}
 
-			
+			Vector3 move = _transforme.position - (Vector3)lastPosition;
+			foreach (Transform objet in objetsToSupport)
+			{
+				objet.position += move;
+			}
+
 		}
 		else
 			stopTimer -= Time.deltaTime;
@@ -117,7 +127,6 @@ public class Plateforme : MonoBehaviour
 
 	uint GetNextObjectif()
 	{
-
 		if (inverseDirection)
 		{
 			if (nextPoint == 0)
@@ -155,6 +164,20 @@ public class Plateforme : MonoBehaviour
 				return nextPoint + 1;
 		}
 
+	}
+
+
+	void OnTriggerEnter2D(Collider2D co)
+	{
+		if (objetsToSupport.IndexOf(co.transform) == -1)
+		{
+			objetsToSupport.Add(co.transform);
+		}
+	}
+
+	void OnTriggerExit2D(Collider2D co)
+	{
+		objetsToSupport.Remove(co.transform);
 	}
 
 #if UNITY_EDITOR
