@@ -38,6 +38,8 @@ public class PlayerController : MonoBehaviour {
     private Vector2 tempVector;
     private float tempFloat;
     private int tempInt;
+    private int tempShort;
+    private bool tempBool;
 
     #endregion
 
@@ -45,6 +47,8 @@ public class PlayerController : MonoBehaviour {
     #region UPDATE + PHYSICS
 
     [Header("Physics Settings"), SerializeField]
+    private LayerMask solidCastLayer;
+    [SerializeField]
     private LayerMask groundCastLayer;
     [SerializeField, Range(0f, 0.5f)]
     private float boxOffset;
@@ -55,7 +59,9 @@ public class PlayerController : MonoBehaviour {
     private RaycastHit2D SecondHit { get { return _secondHits[0]; } }
     private RaycastHit2D[] _secondHits = new RaycastHit2D[1];
 
-    //private Vector2 previousPosition;
+    private Vector2 mainCastOrigin;
+    private Vector2 frontCastOrigin;
+    private Vector2 backCastOrigin;
 
     private Vector2 MovementVector
     {
@@ -115,66 +121,208 @@ public class PlayerController : MonoBehaviour {
     {
         while (!IsGrounded)
         {
-            if (Physics2D.BoxCastNonAlloc(Position2D, _collider.size, 0f, Vector2.up * HeadingY, _mainHits, movementVectorScaled.y + boxOffset, groundCastLayer) > 0)
+            //MovementVector -= Vector2.up * 5 * Time.deltaTime; // Apply Dat Gravity
+
+            mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
+            frontCastOrigin = mainCastOrigin - sizeY * HeadingY;
+            backCastOrigin = mainCastOrigin - sizeX * HeadingX;
+
+            Debug.DrawLine(Position2D, mainCastOrigin, Color.black);
+            Debug.DrawLine(Position2D, frontCastOrigin, Color.black);
+            Debug.DrawLine(Position2D, backCastOrigin, Color.black);
+            Debug.DrawLine(mainCastOrigin, mainCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.red);
+            Debug.DrawLine(backCastOrigin, backCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.red);
+            Debug.DrawLine(mainCastOrigin, mainCastOrigin + Vector2.right * (boxOffset + movementVectorScaled.x) * HeadingX, Color.blue);
+            Debug.DrawLine(frontCastOrigin, frontCastOrigin + Vector2.right * (boxOffset + movementVectorScaled.x) * HeadingX, Color.blue);
+
+            if (HeadingY < 0) // descending
             {
-                //Debug.DrawLine(Position2D + _heading * boxOffset, MainHit.point, Color.red);
-                //Debug.DrawRay(MainHit.point, MainHit.normal, Color.green);
-
-                _transform.position = MainHit.centroid - Vector2.up * boxOffset * HeadingY;
-
-                if (HeadingY < 0) // descending
+                if (DownCast())
                 {
-                    tempFloat = Vector2.Angle(MainHit.normal, Vector2.up);
-                    if (tempFloat <= 45f) // walkable
-                    {
-                        if (!ForwardBoxCast())
-                            _transform.Translate(Vector2.right * movementVectorScaled.x);
-                        MovementVector = Vector2.zero;
-                        IsGrounded = true;
-                    }
-                    else if (tempFloat < 90f) // slidable (not walkable)
-                    {
-                        Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
-                        MovementVector = Vector3.Cross(tempVector, MainHit.normal) * HeadingX * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
-                    }
-                    else // wall, or ceiling(!?)
-                    {
-                        if (!ForwardBoxCast())
-                            _transform.Translate(Vector2.right * movementVectorScaled.x);
-                    }
+                    // grounded
                 }
-                else // ascending, meaning ceiling
-                {
-                    tempVector = _movementVector;
-                    tempVector.y = 0;
-                    MovementVector = tempVector; // stopping upward momentum
-
-                    if (!ForwardBoxCast())
-                        _transform.Translate(Vector2.right * movementVectorScaled.x);
-                }
-            } // so, you touched nothing under
-            else
-            {
-                if (!ForwardBoxCast()) // so, you touched nothing forward
-                {   
-                    _transform.Translate(movementVectorScaled);
-                }
-                else
-                    _transform.Translate(Vector2.up * movementVectorScaled.y);
             }
-            yield return false;
+            else if(UpCast()) // ascending
+            {
+                tempVector = MovementVector;
+                tempVector.y = -tempVector.y;
+                MovementVector = tempVector;
+            }
+
+            ForwardCast();
+
+            yield return null;
         }
     }
 
-    bool ForwardBoxCast()
+    bool ForwardCast()
+    {
+        if (Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.right * HeadingX, _mainHits, Mathf.Abs(movementVectorScaled.x) + boxOffset, solidCastLayer) > 0)
+        {
+            if (Physics2D.RaycastNonAlloc(frontCastOrigin, Vector2.right * HeadingX, _secondHits, Mathf.Abs(movementVectorScaled.x) + boxOffset, solidCastLayer) > 0)
+            {
+                if (HeadingX > 0) { // facing right
+                    if(SecondHit.point.x < MainHit.point.x) // know where you're blocked first
+                        _transform.Translate(Vector2.right * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+                    else
+                        _transform.Translate(Vector2.right * ((MainHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+                }
+                else // facing left
+                {
+                    if (MainHit.point.x <= SecondHit.point.x) // know where you're blocked first
+                        _transform.Translate(Vector2.right * ((MainHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+                    else
+                        _transform.Translate(Vector2.right * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x * 2f));
+                }
+                return true;
+            }
+            else // no hesitation
+            {
+                _transform.Translate(Vector2.right * ((MainHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+            }
+            return true;
+        }
+        else if (Physics2D.RaycastNonAlloc(frontCastOrigin, Vector2.right * HeadingX, _mainHits, Mathf.Abs(movementVectorScaled.x) + boxOffset, solidCastLayer) > 0)
+        {
+            _transform.Translate(Vector2.right * ((MainHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+            return true;
+        }
+        
+        _transform.Translate(Vector2.right * movementVectorScaled.x);  
+        return false;
+    }
+    bool BackCast() // this one should not be called every frame
+    {
+        if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.left * HeadingX, _secondHits, boxOffset, solidCastLayer) > 0)
+        {
+            _transform.Translate(Vector2.left * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+            return true;
+        }
+
+        //_transform.Translate(Vector2.right * movementVectorScaled.x);
+        return false;
+    }
+
+    bool DownCast()
+    {
+        if (Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+        {
+            if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _secondHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+            {
+                if (SecondHit.point.y > MainHit.point.y) // know where you're blocked first
+                    _transform.Translate(Vector2.up * ((SecondHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
+                else
+                    _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
+            }
+            else // no hesitation
+            {
+                _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
+            }
+            return true;
+        }
+        else if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+        {
+            _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
+            return true;
+        }
+
+        _transform.Translate(Vector2.up * movementVectorScaled.y);  
+        return false;
+    }
+    bool UpCast()
+    {
+        if (Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.up, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+        {
+            if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.up, _secondHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+            {
+                if (SecondHit.point.y > MainHit.point.y) // know where you're blocked first
+                    _transform.Translate(Vector2.up * ((SecondHit.point.y - (boxOffset + extentY.y)) - Position2D.y));
+                else
+                    _transform.Translate(Vector2.up * ((MainHit.point.y - (boxOffset + extentY.y)) - Position2D.y));
+            }
+            else // no hesitation
+            {
+                _transform.Translate(Vector2.up * ((MainHit.point.y - (boxOffset + extentY.y)) - Position2D.y));
+            }
+            return true;
+        }
+        else if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.up, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+        {
+            _transform.Translate(Vector2.up * ((MainHit.point.y - (boxOffset + extentY.y)) - Position2D.y));
+            return true;
+        }
+
+        _transform.Translate(Vector2.up * movementVectorScaled.y);
+        return false;
+    }
+
+    /*bool ForwardBoxCast()
     {
         if (Physics2D.BoxCastNonAlloc(Position2D, _collider.size, 0f, Vector2.right * HeadingX, _secondHits, movementVectorScaled.x + boxOffset, groundCastLayer) > 0) // finish forward movement
         {
-            _transform.position = SecondHit.centroid - Vector2.right * boxOffset * HeadingX;
+            Debug.Log(((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+            //Debug.DrawLine(Vector2.up, Vector2.up + Vector2.right * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x), Color.blue);
+            Debug.DrawLine(SecondHit.point, SecondHit.point + SecondHit.normal, Color.green);
+            //Debug.Break();
+            _transform.Translate(Vector2.right * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
             return true;
         }
         return false;
     }
+    bool BackBoxCast()
+    {
+        if (Physics2D.BoxCastNonAlloc(Position2D, _collider.size, 0f, Vector2.left * HeadingX, _secondHits, movementVectorScaled.x + boxOffset, groundCastLayer) > 0) // finish forward movement
+        {
+            _transform.Translate(Vector2.left * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+            return true;
+        }
+        return false;
+    }
+
+    bool DownBoxCast()
+    {
+        if (Physics2D.BoxCastNonAlloc(Position2D, _collider.size, 0f, Vector2.up * HeadingY, _mainHits, movementVectorScaled.y + boxOffset, groundCastLayer) > 0)
+        {
+            _transform.Translate(Vector2.up * ((MainHit.point.y - (boxOffset + extentY.y) * HeadingY) - Position2D.y));
+
+            if (HeadingY < 0) // descending
+            {
+                tempFloat = Vector2.Angle(MainHit.normal, Vector2.up);
+                if (tempFloat <= 45f) // walkable
+                {
+                    IsGrounded = true;
+                }
+                else if (tempFloat < 90f) // slidable (not walkable)
+                {
+                    //Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
+                    //MovementVector = Vector3.Cross(tempVector, MainHit.normal) * HeadingX * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
+                }
+            }
+            return true;
+        }
+
+        _transform.Translate(Vector2.up * movementVectorScaled.y);
+        return false;
+    }
+    bool UpBoxeCast()
+    {
+        if (Physics2D.BoxCastNonAlloc(Position2D, _collider.size, 0f, Vector2.up * HeadingY, _mainHits, movementVectorScaled.y + boxOffset, groundCastLayer) > 0)
+        {
+            _transform.Translate(Vector2.up * ((MainHit.point.y - (boxOffset + extentY.y) * HeadingY) - Position2D.y));
+
+            if (!ForwardBoxCast()) // so, you touched nothing forward
+            {
+                _transform.Translate(movementVectorScaled);
+            }
+            else
+                _transform.Translate(Vector2.up * movementVectorScaled.y);
+
+            return true;
+        }
+
+        _transform.Translate(Vector2.up * movementVectorScaled.y);
+        return false;
+    }*/
 
     #endregion
 
@@ -197,14 +345,14 @@ public class PlayerController : MonoBehaviour {
 
     public void OnTouchingStart(Vector2 target)
     {
-        MovementVector = (target - (Vector2)_transform.position).normalized;
-        if (HeadingY > 0)
-            IsGrounded = false;
+        MovementVector = (target - (Vector2)_transform.position);// Vector2.Distance(target, (Vector2)_transform.position);
+        //if (HeadingY > 0)
+        IsGrounded = false;
     }
 
     public void OnTouchingStay(Vector2 target)
     {
-        MovementVector = (target - (Vector2)_transform.position).normalized;
+        //MovementVector = (target - (Vector2)_transform.position).normalized;
     }
 
     #endregion
