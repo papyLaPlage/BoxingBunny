@@ -128,7 +128,7 @@ public class PlayerControllerH : MonoBehaviour
 			}
 			else
 			{
-				positionTargetJump = new Vector2(target.x, _transform.position.y);
+				positionTargetJump = new Vector2(target.x, _transform.position.y - 3);
 			}
 
 			positionBeforeJump = _transform.position;
