@@ -164,15 +164,22 @@ public class Plateforme : MonoBehaviour
 	{
 		if (points.Length > 1)
 		{
-			Gizmos.color = Color.green;
-
+			int L = points.Length - 1;
 			Vector2 transPosition;
 			if (isPlay)
 				transPosition = Vector2.zero;
 			else
 				transPosition = transform.position;
 
-			int L = points.Length - 1;
+			if (inverseDirection)
+			{
+				Gizmos.color = Color.blue;
+			}
+			else
+			{
+				Gizmos.color = Color.cyan;
+			}
+
 			for (int i = 0; i < L; i++)
 			{
 				Gizmos.DrawWireSphere(transPosition + points[i], drawSize);
@@ -180,7 +187,11 @@ public class Plateforme : MonoBehaviour
 			}
 
 			Gizmos.DrawWireSphere(transPosition + points[L], drawSize);
-			Gizmos.DrawLine(transPosition + points[0], transPosition + points[L]);
+
+			if (comportent != Comportement.GoAndReturn)
+			{
+				Gizmos.DrawLine(transPosition + points[0], transPosition + points[L]);
+			}
 		}
 	}
 #endif
