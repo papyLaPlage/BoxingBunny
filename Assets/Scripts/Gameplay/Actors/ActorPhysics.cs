@@ -79,11 +79,6 @@ public class ActorPhysics : MonoBehaviour {
     [SerializeField, Range(0, 100)]
     private float gravityForce;
 
-    [SerializeField, Range(0, 45)]
-    private float walkableAngle;
-    [SerializeField, Range(1, 89)]
-    private float slidableAngle;
-
     public void ApplyGravity()
     {
          MovementVector -= Vector2.up * gravityForce * Time.deltaTime;
@@ -233,31 +228,31 @@ public class ActorPhysics : MonoBehaviour {
                 if (SecondHit.point.y > MainHit.point.y)
                 { // know where you're blocked first
                     _transform.Translate(Vector2.up * ((SecondHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
-
+                    castResult.normalAngle = Vector2.Angle(Vector2.up, SecondHit.normal);
                 }
                 else
+                {
                     _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
+                    castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
+                }
             }
             else // no hesitation
             {
                 _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
-                tempFloat = Vector2.Angle(Vector2.up, MainHit.normal);
-                if (tempFloat <= 45)
-                {
+                castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
 
-                }
-                else if (tempFloat <= 89)
-                {
+                /*
                     Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
                     MovementVector = Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
                     Debug.DrawRay(MainHit.point, Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1), Color.red); // this is the movement vector transformed to a sliding vector
-                }
+                */
             }
             return;
         }
         else if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
         {
             _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
+            castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
             return;
         }
 
@@ -283,7 +278,7 @@ public class ActorPhysics : MonoBehaviour {
             }
             return;
         }
-        else if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.up, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
+        else if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.up, _mainHits, boxOffset - movementVectorScaled.y, solidCastLayer) > 0)
         {
             _transform.Translate(Vector2.up * ((MainHit.point.y - (boxOffset + extentY.y)) - Position2D.y));
             return;

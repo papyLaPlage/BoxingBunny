@@ -70,7 +70,7 @@ public class PlayerController : MonoBehaviour {
             if (_physics.HeadingY < 0) // descending
             {
                 _physics.DownCast();
-                if(_physics.castResult.touched)
+                if(_physics.castResult.touched && _physics.castResult.normalAngle <= walkableAngle)
                 {
                     _physics.IsGrounded = true;
                     _physics.MovementVector = Vector2.zero;
@@ -111,11 +111,30 @@ public class PlayerController : MonoBehaviour {
 
     #region POINTING
 
+    [Header("Controls"), SerializeField]
+    private float maxDistance;
+    [SerializeField]
+    private float minHop;
+    [SerializeField]
+    private float jumpImpulsion;
+    [SerializeField]
+    private float speed;
+    [SerializeField, Range(0, 45)]
+    private float walkableAngle;
+    [SerializeField, Range(1, 89)]
+    private float slidableAngle;
+
     public void OnTouchingStart(Vector2 target)
     {
-        _physics.MovementVector = (target - (Vector2)_transform.position);// Vector2.Distance(target, (Vector2)_transform.position);
-        //if (HeadingY > 0)
-        _physics.IsGrounded = false;
+        if (_physics.IsGrounded)
+        {
+            tempVector = Vector2.ClampMagnitude((target - (Vector2)_transform.position), maxDistance);
+            tempVector.y = Mathf.Max(minHop, tempVector.y * jumpImpulsion + minHop);
+            tempVector.x *= speed;
+            _physics.MovementVector = tempVector;
+            //Debug.Log((target - (Vector2)_transform.position)+" "+tempVector);
+            _physics.IsGrounded = false;
+        }
     }
 
     public void OnTouchingStay(Vector2 target)
