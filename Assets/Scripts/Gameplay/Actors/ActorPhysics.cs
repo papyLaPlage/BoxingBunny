@@ -49,11 +49,11 @@ public class ActorPhysics : MonoBehaviour {
 
     public Vector2 MovementVector
     {
-        get { return movementVectorCaped; }
+        get { return _movementVector; }
         set
         {
             _movementVector = movementVectorCaped = value;
-            movementVectorCaped.y = Mathf.Clamp(movementVectorCaped.y, -gravityForce, gravityForce);
+            movementVectorCaped.y = Mathf.Clamp(movementVectorCaped.y, -gravityCap, gravityCap);
             movementVectorScaled = movementVectorCaped * Time.deltaTime;
 
             if (HeadingX > 0) { if (value.x < 0) HeadingX = -1; }
@@ -80,6 +80,8 @@ public class ActorPhysics : MonoBehaviour {
 
     [Range(0, 100)]
     public float gravityForce;
+    [Range(0, 100)]
+    public float gravityCap;
 
     public void ApplyGravity()
     {
