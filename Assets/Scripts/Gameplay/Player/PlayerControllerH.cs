@@ -70,34 +70,54 @@ public class PlayerControllerH : MonoBehaviour
 					state = States.Grounded;
 			}
 
+			if (_rigidbody2D.velocity.y > 0)
+			{
+				_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 0);
+			}
+
 			break;
 
 			case States.Jumping:
-
-			_rigidbody2D.gravityScale = 0;
 
 			jumpTimer += Time.deltaTime;
 			
 			if (jumpTimer >= jumpTime)
 			{
 				state = States.Falling;
-				_rigidbody2D.position = positionTargetJump;
+				//_rigidbody2D.position = positionTargetJump;
 				_rigidbody2D.velocity = Vector2.down * 20f;
 			}
 			else
 			{
+
+				_rigidbody2D.gravityScale = 0;
+
 				float pourcent = jumpTimer / jumpTime;
+
+				LimiteYTestedForJump = Mathf.Min(LimiteYTestedForJump, 10);
 
 				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
 				transitionPosition.y += Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 2, 2, 10) * Mathf.Sin(Mathf.PI * pourcent);
 
-				_rigidbody2D.MovePosition(transitionPosition);
+				//_rigidbody2D.MovePosition(transitionPosition);
+
+				_rigidbody2D.velocity = (transitionPosition - (Vector2)_transform.position) * 30;
 
 				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
 				for (int i = 0; i < colliders.Length; i++)
 				{
 					if (colliders[i].gameObject != gameObject)
 						state = States.Falling;
+				}
+
+				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
+				for (int i = 0; i < colliders.Length; i++)
+				{
+					if (colliders[i].gameObject != gameObject)
+					{
+						state = States.Falling;
+						_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
+					}	
 				}
 			}
 
@@ -127,7 +147,8 @@ public class PlayerControllerH : MonoBehaviour
 
 	#region MOVING
 
-	private RaycastHit2D hitRight, hitLeft;
+	private float LimiteYTestedForJump;
+	private RaycastHit2D hitRightDown, hitLeftDown, hitStartUp, hitEndUp;
 
 	public void OnTouchingStart(Vector2 target)
 	{
@@ -136,18 +157,19 @@ public class PlayerControllerH : MonoBehaviour
 			state = States.Jumping;
 			jumpTimer = 0;
 
-			Vector2 targetDown = target + Vector2.down * 1;
+			Vector2 targetDown = target + Vector2.down * 6.5f;
+			Vector2 Up = Vector2.up * 6.5f;
 			Vector2 VectorRight = Vector2.right * 0.5f;
 			Vector2 VectorLeft = Vector2.left * 0.5f;
 
-			hitRight = Physics2D.Linecast(target + VectorRight, targetDown + VectorRight, groundCastLayer);
-			hitLeft = Physics2D.Linecast(target + VectorLeft, targetDown + VectorLeft, groundCastLayer);
+			hitRightDown = Physics2D.Linecast(target + VectorRight, targetDown + VectorRight, groundCastLayer);
+			hitLeftDown = Physics2D.Linecast(target + VectorLeft, targetDown + VectorLeft, groundCastLayer);
 
 			float positionTargetJumpRight;
 
-			if (hitRight.collider != null && hitRight.transform.tag == "ground")
+			if (hitRightDown.collider != null && hitRightDown.transform.tag == "ground")
 			{
-				positionTargetJumpRight = hitRight.point.y;
+				positionTargetJumpRight = hitRightDown.point.y;
 			}
 			else
 			{
@@ -156,9 +178,9 @@ public class PlayerControllerH : MonoBehaviour
 
 			float positionTargetJumpLeft;
 
-			if (hitLeft.collider != null && hitLeft.transform.tag == "ground")
+			if (hitLeftDown.collider != null && hitLeftDown.transform.tag == "ground")
 			{
-				positionTargetJumpLeft = hitLeft.point.y;
+				positionTargetJumpLeft = hitLeftDown.point.y;
 			}
 			else
 			{
@@ -175,13 +197,37 @@ public class PlayerControllerH : MonoBehaviour
 
 			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 20, 0.2f, 0.8f);
 
+			/*
+			//test hauteur au début du saut
+			float limiteYStart = 10, limiteYEnd = 10;
+			hitStartUp = Physics2D.Linecast(_transform.position, Up + (Vector2)_transform.position, groundCastLayer);
+
+			if (hitStartUp.collider != null && hitStartUp.transform.tag == "ground")
+			{
+				limiteYStart = hitStartUp.point.y - _transform.position.y;
+			}
+
+			//test hauteur à la fin du saut
+			hitEndUp = Physics2D.Linecast(target, Up + target, groundCastLayer);
+			if (hitEndUp.collider != null && hitEndUp.transform.tag == "ground")
+			{
+				limiteYEnd = hitEndUp.point.y - target.y;
+			}
+
+			LimiteYTestedForJump = Mathf.Min(limiteYStart, limiteYEnd) - 1.25f;*/
+
 #if UNITY_EDITOR
 			gizLineA = target + VectorRight;
-			gizLineB.x = gizLineA.x;
-			gizLineB.y = hitRight.point.y;
+			//gizLineB.x = gizLineA.x;
+			//gizLineB.y = hitRightDown.point.y;
+			gizLineB = targetDown + VectorRight;
+			gizLineB.y = hitRightDown.point.y;
+
 			gizLineC = target + VectorLeft;
-			gizLineD.x = gizLineC.x;
-			gizLineD.y = hitLeft.point.y;
+			//gizLineD.x = gizLineC.x;
+			//gizLineD.y = hitLeftDown.point.y;
+			gizLineD = targetDown + VectorLeft;
+			gizLineD.y = hitLeftDown.point.y;
 #endif
 		}
 	}
@@ -229,11 +275,13 @@ public class PlayerControllerH : MonoBehaviour
 	Vector2 gizLineD;
 	void OnDrawGizmos()
 	{
+		Gizmos.color = Color.red;
 		Gizmos.DrawLine(gizLineA, gizLineB);
 		Gizmos.DrawLine(gizLineC, gizLineD);
 
+		Gizmos.color = Color.magenta;
 		Gizmos.DrawLine(positionTargetJump + Vector2.right, positionTargetJump + Vector2.left);
-		
+		Gizmos.DrawLine(positionTargetJump + Vector2.up, positionTargetJump + Vector2.down);
 	}
 #endif
 }

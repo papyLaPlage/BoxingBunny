@@ -2,7 +2,7 @@
 using System.Collections;
 
 //Positions 2D 
-public class Point2D : MonoBehaviour
+public class Point2D
 {
     public EnumCameraPlan enumCameraPlan;
     public Vector2 position = Vector2.zero;
@@ -52,11 +52,12 @@ public class Point2D : MonoBehaviour
         }
     }
 
-	/*public static Point2D zero
+	public static Point2D zero
 	{
 		get
 		{
 			return new Point2D();
 		}
-	}*/
+	}
+	
 }

@@ -44,6 +44,13 @@ public class Plateforme : MonoBehaviour
 		{
 			Destroy(this);
 		}
+
+		switch (comportent)
+		{
+			case Comportement.Teleport:
+			Destroy(GetComponent<EdgeCollider2D>());
+			break;
+		}
 	}
 
 	void Start()
@@ -81,11 +88,14 @@ public class Plateforme : MonoBehaviour
 				default:
 				case Comportement.Loop:
 				_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
+
 				if ((Vector2)_transforme.position == points[nextPoint])
 				{
 					nextPoint = GetNextObjectif();
 					stopTimer = stopTime;
 				}
+
+				MoveObjets();
 				break;
 
 				case Comportement.Teleport:
@@ -103,6 +113,7 @@ public class Plateforme : MonoBehaviour
 				else
 				{
 					_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
+					MoveObjets();
 				}
 
 
@@ -113,16 +124,18 @@ public class Plateforme : MonoBehaviour
 				}
 				break;
 			}
-
-			Vector3 move = _transforme.position - (Vector3)lastPosition;
-			foreach (Transform objet in objetsToSupport)
-			{
-				objet.position += move;
-			}
-
 		}
 		else
 			stopTimer -= Time.deltaTime;
+	}
+
+	void MoveObjets()
+	{
+		Vector3 move = _transforme.position - (Vector3)lastPosition;
+		foreach (Transform objet in objetsToSupport)
+		{
+			objet.position += move;
+		}
 	}
 
 	uint GetNextObjectif()
