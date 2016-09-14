@@ -49,7 +49,7 @@ public class ActorPhysics : MonoBehaviour {
 
     public Vector2 MovementVector
     {
-        get { return _movementVector; }
+        get { return movementVectorCaped; }
         set
         {
             _movementVector = movementVectorCaped = value;
@@ -175,6 +175,7 @@ public class ActorPhysics : MonoBehaviour {
     public struct CastResult
     {
         public bool touched;
+        public Vector2 normal;
         public float normalAngle;
         public int heading;
     }
@@ -260,21 +261,21 @@ public class ActorPhysics : MonoBehaviour {
                 if (SecondHit.point.y > MainHit.point.y) // know where you're blocked first
                 { 
                     _transform.Translate(Vector2.up * ((SecondHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
-                    castResult.normalAngle = Vector2.Angle(Vector2.up, SecondHit.normal);
-                    castResult.heading = (int)HeadingX;
+                    castResult.normal = SecondHit.normal;
                 }
                 else
                 {
                     _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
-                    castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
-                    castResult.heading = (int)-HeadingX;
+                    castResult.normal = MainHit.normal;
                 }
+                
             }
             else // no hesitation
             {
                 _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
-                castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
-                castResult.heading = (int)-HeadingX;
+                castResult.normal = MainHit.normal;
+                castResult.normalAngle = Vector2.Angle(Vector2.up, castResult.normal);
+                castResult.heading = castResult.normal.x > 0 ? 1 : -1;
                 /*
                     Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
                     MovementVector = Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
@@ -286,8 +287,9 @@ public class ActorPhysics : MonoBehaviour {
         else if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
         {
             _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
-            castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
-            castResult.heading = (int)HeadingX;
+            castResult.normal = MainHit.normal;
+            castResult.normalAngle = Vector2.Angle(Vector2.up, castResult.normal);
+            castResult.heading = castResult.normal.x > 0 ? 1 : -1;
             return;
         }
 
