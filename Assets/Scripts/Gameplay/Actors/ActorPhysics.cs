@@ -29,6 +29,7 @@ public class ActorPhysics : MonoBehaviour {
 
         HeadingX = HeadingY = 1;
         _isGrounded = true;
+        _isGrounded = true;
     }
 
     // Use this for initialization
@@ -43,17 +44,17 @@ public class ActorPhysics : MonoBehaviour {
     private LayerMask solidCastLayer;
     [SerializeField]
     private LayerMask groundCastLayer;
-    [SerializeField, Range(0f, 0.5f)]
-    private float boxOffset;
+    [Range(0f, 0.5f)]
+    public float boxOffset;
 
     public Vector2 MovementVector
     {
         get { return _movementVector; }
         set
         {
-            _movementVector = value;
-            _movementVector.y = Mathf.Max(_movementVector.y, -gravityForce);
-            movementVectorScaled = value * Time.deltaTime;
+            _movementVector = movementVectorCaped = value;
+            movementVectorCaped.y = Mathf.Clamp(movementVectorCaped.y, -gravityForce, gravityForce);
+            movementVectorScaled = movementVectorCaped * Time.deltaTime;
 
             if (HeadingX > 0) { if (value.x < 0) HeadingX = -1; }
             else if (value.x >= 0) HeadingX = 1;
@@ -62,6 +63,7 @@ public class ActorPhysics : MonoBehaviour {
         }
     }
     private Vector2 _movementVector; // used to know the next movement, unscaled
+    private Vector2 movementVectorCaped;
     private Vector2 movementVectorScaled;
 
     public float HeadingX
@@ -76,8 +78,8 @@ public class ActorPhysics : MonoBehaviour {
     }
     private Vector2 _heading; // general direction, used mainly for calculation 
 
-    [SerializeField, Range(0, 100)]
-    private float gravityForce;
+    [Range(0, 100)]
+    public float gravityForce;
 
     public void ApplyGravity()
     {
@@ -101,9 +103,10 @@ public class ActorPhysics : MonoBehaviour {
                 _isGrounded = value;
                 if (value)
                 {
+                    _isSliding = false;
                     ExecuteOnGrounded();
                 }
-                else
+                else if(!_isSliding)
                 {
                     ExecuteOnAirborne();
                 }
@@ -111,7 +114,28 @@ public class ActorPhysics : MonoBehaviour {
         }
     }
     private bool _isGrounded = true;
-    private bool isSliding = false;
+
+    public bool IsSliding
+    {
+        get { return _isSliding; }
+        set
+        {
+            if (value != _isSliding)
+            {
+                _isSliding = value;
+                if (value)
+                {
+                    IsGrounded = false;
+                    ExecuteOnSliding();
+                }
+                else if (!_isGrounded)
+                {
+                    ExecuteOnAirborne();
+                }
+            }
+        }
+    }
+    private bool _isSliding = false;
 
     void ExecuteOnGrounded()
     {
@@ -125,6 +149,13 @@ public class ActorPhysics : MonoBehaviour {
         if(OnAirborne != null)
         {
             OnAirborne();
+        }
+    }
+    void ExecuteOnSliding()
+    {
+        if (OnSliding != null)
+        {
+            OnSliding();
         }
     }
 
@@ -145,6 +176,7 @@ public class ActorPhysics : MonoBehaviour {
     {
         public bool touched;
         public float normalAngle;
+        public int heading;
     }
     public CastResult castResult = new CastResult();
 
@@ -210,7 +242,7 @@ public class ActorPhysics : MonoBehaviour {
         castResult.touched = true;
         if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.left * HeadingX, _secondHits, boxOffset, solidCastLayer) > 0)
         {
-            _transform.Translate(Vector2.left * ((SecondHit.point.x - (boxOffset + extentX.x) * HeadingX) - Position2D.x));
+            _transform.Translate(Vector2.right * ((SecondHit.point.x + (boxOffset + extentX.x) * HeadingX) - Position2D.x));
             return;
         }
 
@@ -225,22 +257,24 @@ public class ActorPhysics : MonoBehaviour {
         {
             if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _secondHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
             {
-                if (SecondHit.point.y > MainHit.point.y)
-                { // know where you're blocked first
+                if (SecondHit.point.y > MainHit.point.y) // know where you're blocked first
+                { 
                     _transform.Translate(Vector2.up * ((SecondHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
                     castResult.normalAngle = Vector2.Angle(Vector2.up, SecondHit.normal);
+                    castResult.heading = (int)HeadingX;
                 }
                 else
                 {
                     _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
                     castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
+                    castResult.heading = (int)-HeadingX;
                 }
             }
             else // no hesitation
             {
                 _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
                 castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
-
+                castResult.heading = (int)-HeadingX;
                 /*
                     Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
                     MovementVector = Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
@@ -253,6 +287,7 @@ public class ActorPhysics : MonoBehaviour {
         {
             _transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
             castResult.normalAngle = Vector2.Angle(Vector2.up, MainHit.normal);
+            castResult.heading = (int)HeadingX;
             return;
         }
 
