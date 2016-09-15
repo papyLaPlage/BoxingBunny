@@ -20,7 +20,6 @@ public class LevelManager : MonoBehaviour {
 
 		if (player.position.y < -10)
 		{
-			SceneManager.UnloadScene(SceneManager.GetActiveScene().name);
 			SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		}
 	}

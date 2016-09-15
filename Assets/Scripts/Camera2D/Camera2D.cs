@@ -47,6 +47,10 @@ public class Camera2D : MonoBehaviour
 	{
 		pointA = new Point2D();
 		pointB = new Point2D();
+
+#if UNITY_EDITOR
+		isPlay = true;
+#endif
 	}
 
 	private void LateUpdate()
@@ -77,12 +81,15 @@ public class Camera2D : MonoBehaviour
 	}
 
 #if UNITY_EDITOR
-
+	bool isPlay = false;
 	void OnDrawGizmos()
 	{
+		if (!isPlay)
+		{
 		Vector3 playerPos = GameObject.FindGameObjectWithTag("Player").transform.position;
 		playerPos.z = transform.position.z;
 		transform.position = playerPos;
+		}
 	}
 #endif
 }

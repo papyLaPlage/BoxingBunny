@@ -16,14 +16,9 @@ public class PlayerControllerH : MonoBehaviour
 		_transform = GetComponent<Transform>();
 		_collider = GetComponent<BoxCollider2D>();
 		_rigidbody2D = GetComponent<Rigidbody2D>();
+
+		gravityScaleOrigine = _rigidbody2D.gravityScale;
 	}
-
-	// Use this for initialization
-	void Start()
-	{
-
-	}
-
 
 	#endregion
 
@@ -45,14 +40,21 @@ public class PlayerControllerH : MonoBehaviour
 
 	private States state = States.Falling;
 
-	private float redresTime = 0.3f;
-	private float redresTimer = 0;
-	private Quaternion lastRotation = Quaternion.identity;
-
 	[SerializeField]
 	private LayerMask groundCastLayer;
 
 	private Collider2D[] colliders;
+
+	private float gravityScaleOrigine = 2;
+
+	private Vector2 transitionPosition = Vector2.zero;
+
+	public float JumpMaxY = 10;
+	public float JumpMinY = 2;
+	public float JumpYDistanceFactor = 0.5f;
+	public float MovePower = 30;
+
+
 	void FixedUpdate()
 	{
 		switch (state)
@@ -60,7 +62,7 @@ public class PlayerControllerH : MonoBehaviour
 			case States.Falling:
 			case States.Grounded:
 
-			_rigidbody2D.gravityScale = 2;
+			_rigidbody2D.gravityScale = gravityScaleOrigine;
 			state = States.Falling;
 
 			colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.down * 0.75f, 0.5f, groundCastLayer);
@@ -78,45 +80,62 @@ public class PlayerControllerH : MonoBehaviour
 			break;
 
 			case States.Jumping:
-
-			jumpTimer += Time.deltaTime;
 			
 			if (jumpTimer >= jumpTime)
 			{
 				state = States.Falling;
-				//_rigidbody2D.position = positionTargetJump;
 				_rigidbody2D.velocity = Vector2.down * 20f;
 			}
 			else
 			{
-
 				_rigidbody2D.gravityScale = 0;
 
 				float pourcent = jumpTimer / jumpTime;
 
-				LimiteYTestedForJump = Mathf.Min(LimiteYTestedForJump, 10);
+				Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+				transitionPositionBefore.y +=
+					Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * JumpYDistanceFactor, JumpMinY, JumpMaxY)
+					* Mathf.Sin(Mathf.PI * pourcent);
+
+				jumpTimer += Time.deltaTime;
+
+				pourcent = jumpTimer / jumpTime;
 
 				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-				transitionPosition.y += Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 2, 2, 10) * Mathf.Sin(Mathf.PI * pourcent);
+				transitionPosition.y += 
+					Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * JumpYDistanceFactor, JumpMinY, JumpMaxY) 
+					* Mathf.Sin(Mathf.PI * pourcent);
 
+				//Appli mouvement
 				//_rigidbody2D.MovePosition(transitionPosition);
+				_rigidbody2D.velocity = (transitionPosition - transitionPositionBefore) * MovePower;
 
-				_rigidbody2D.velocity = (transitionPosition - (Vector2)_transform.position) * 30;
-
+				//collition Avant
 				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
-				for (int i = 0; i < colliders.Length; i++)
-				{
-					if (colliders[i].gameObject != gameObject)
-						state = States.Falling;
-				}
-
-				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
 				for (int i = 0; i < colliders.Length; i++)
 				{
 					if (colliders[i].gameObject != gameObject)
 					{
 						state = States.Falling;
-						_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
+						_rigidbody2D.velocity = Vector2.down * 20f;
+						break;
+					}
+				}
+
+				//collistion Au-dessus
+				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
+				for (int i = 0; i < colliders.Length; i++)
+				{
+					if (colliders[i].gameObject != gameObject)
+					{
+						//state = States.Falling;
+						//_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
+
+						if (pourcent < 0.5f)
+						{
+							jumpTimer = jumpTime * (1 - pourcent);
+						}
+						break;
 					}	
 				}
 			}
@@ -150,12 +169,18 @@ public class PlayerControllerH : MonoBehaviour
 	private float LimiteYTestedForJump;
 	private RaycastHit2D hitRightDown, hitLeftDown, hitStartUp, hitEndUp;
 
+	public float TimeJumpMax = 0.8f;
+	public float TimeJumpMin = 0.2f;
+	public float TimeFactorJumpDistance = 0.2f;
+
 	public void OnTouchingStart(Vector2 target)
 	{
 		if (state == States.Grounded)
 		{
 			state = States.Jumping;
 			jumpTimer = 0;
+
+			transitionPosition = _transform.position;
 
 			Vector2 targetDown = target + Vector2.down * 6.5f;
 			Vector2 Up = Vector2.up * 6.5f;
@@ -195,7 +220,7 @@ public class PlayerControllerH : MonoBehaviour
 
 			Flip(positionBeforeJump.x < positionTargetJump.x);
 
-			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) / 20, 0.2f, 0.8f);
+			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * TimeFactorJumpDistance, TimeJumpMin, TimeJumpMax);
 
 			/*
 			//test hauteur au début du saut
