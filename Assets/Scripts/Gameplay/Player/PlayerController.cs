@@ -55,7 +55,7 @@ public class PlayerController : MonoBehaviour {
 
     void OnAirborne()
     {
-        
+        Facing = (int)_physics.HeadingX;
         StartCoroutine(AirborneUpdate());
         _anims.Play("Airborne");
     }
@@ -73,10 +73,14 @@ public class PlayerController : MonoBehaviour {
     #region STATES/UPDATES
 
     // Update is called once per frame
+    bool airborneUpdateActive = false;
     IEnumerator AirborneUpdate()
     {
+        if (airborneUpdateActive)
+            yield break;
+        airborneUpdateActive = true;
+
         _physics.BackCast();
-        Facing = (int)_physics.HeadingX;
 
         while (!_physics.IsGrounded && !_physics.IsSliding)
         {
@@ -119,6 +123,8 @@ public class PlayerController : MonoBehaviour {
 
             yield return null;
         }
+
+        airborneUpdateActive = false;
     }
 
 
