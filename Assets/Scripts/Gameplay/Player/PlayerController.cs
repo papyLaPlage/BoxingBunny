@@ -247,6 +247,7 @@ public class PlayerController : MonoBehaviour {
     public IEnumerator Punch()
     {
         punchTimer = punchStartup + punchRecovery;
+        _anims.Play("PunchCooldown");
         _anims.Play("PunchR");
 
         while (punchTimer > punchRecovery) // startup

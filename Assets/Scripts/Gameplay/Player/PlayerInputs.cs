@@ -55,8 +55,10 @@ public class PlayerInputs : MonoBehaviour
 
     #region BUTTON INPUTS
 
-    private Rect rightButtonRect;
-    private Rect leftButtonRect;
+    [SerializeField]
+    private GameObject rightPunchButton;
+    [SerializeField]
+    private GameObject leftPunchButton;
 
     public void OnPunchClicked(bool rightPunch)
 	{
@@ -73,16 +75,34 @@ public class PlayerInputs : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		if (Input.GetMouseButton(0) && !EventSystem.current.IsPointerOverGameObject())
-		{
-            clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
-			if (Input.GetMouseButtonDown(0))
-			{ // first frame touching
-				_player.OnTouchingStart(clickPosition);
-			}
-			else
-				_player.OnTouchingStay(clickPosition);
-		}
+        if (Input.GetMouseButton(0))
+        {
+            
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (EventSystem.current.currentSelectedGameObject == rightPunchButton)
+                    {
+                        _player.OnPunching(true);
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject == leftPunchButton)
+                    {
+                        _player.OnPunching(false);
+                    }
+                }
+            }
+            else
+            {
+                clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
+                if (Input.GetMouseButtonDown(0))
+                { // first frame touching
+                    _player.OnTouchingStart(clickPosition);
+                }
+                else
+                    _player.OnTouchingStay(clickPosition);
+            }
+        }
 	}
 
 	#endregion
