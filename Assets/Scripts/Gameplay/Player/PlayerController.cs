@@ -64,7 +64,7 @@ public class PlayerController : MonoBehaviour {
     {
         StartCoroutine(SlidingUpdate());
         Facing = (int)_physics.HeadingX;
-        _anims.Play("Idle");
+        _anims.Play("Sliding");
     }
 
     #endregion
@@ -82,10 +82,6 @@ public class PlayerController : MonoBehaviour {
         {
             _physics.ApplyGravity();
 
-            _physics.CalculateCastOrigins();
-
-            //_physics.DebugDraw();
-
             if (_physics.HeadingY < 0) // descending
             {
                 _physics.DownCast();
@@ -102,9 +98,7 @@ public class PlayerController : MonoBehaviour {
                         slidingAngle = _physics.castResult.normalAngle;
                         _physics.MovementVector = ((Vector2)(Quaternion.Euler(0, 0, slidingAngle * -_physics.castResult.heading) * (Vector2.right * _physics.castResult.heading))  + Vector2.down)* slidingSpeed;
                         _physics.IsSliding = true;
-                        Debug.DrawRay(Position2D, _physics.MovementVector, Color.red);
-                        //Debug.DrawRay(Position2D, Vector3.Cross(_physics.MovementVector, _physics.castResult.normal) * _physics.castResult.heading, Color.red); // this is the movement vector transformed to a sliding vector
-                        //_physics.MovementVector = Vector2.zero; //obtain the sliding vector
+                        //Debug.DrawRay(Position2D, _physics.MovementVector, Color.red);
                         //Debug.Break();
                     }
                 }
@@ -121,6 +115,8 @@ public class PlayerController : MonoBehaviour {
 
             _physics.ForwardCast();
 
+            //_physics.DebugDraw();
+
             yield return null;
         }
     }
@@ -132,11 +128,6 @@ public class PlayerController : MonoBehaviour {
     {
         while (_physics.IsSliding)
         {
-            _physics.CalculateCastOrigins();
-
-            _physics.DebugDraw();
-            //Debug.Break();
-
             _physics.ForwardCast();
 
             _physics.DownCast();
@@ -158,6 +149,8 @@ public class PlayerController : MonoBehaviour {
             {
                 _physics.IsSliding = false;
             }
+
+            //_physics.DebugDraw();
 
             yield return null;
         }
@@ -233,7 +226,7 @@ public class PlayerController : MonoBehaviour {
 
     public void OnPunching(bool rightPunch) // from the buttons
     {
-        if (punchTimer <= 0f)
+        if (punchTimer <= 0f && !_physics.IsSliding)
         {
             Facing = rightPunch ? 1 : -1;
             StartCoroutine(Punch());
@@ -244,27 +237,30 @@ public class PlayerController : MonoBehaviour {
         }*/
     }
 
-    public IEnumerator Punch()
+    IEnumerator Punch()
     {
         punchTimer = punchStartup + punchRecovery;
-        _anims.Play("PunchCooldown");
+        _anims.Play("PunchCooldown"); //hack-ish
         _anims.Play("PunchR");
-
-        while (punchTimer > punchRecovery) // startup
-        {
-            punchTimer -= Time.deltaTime;
-            yield return null;
-        }
-
-        if (Physics2D.CircleCastNonAlloc(Position2D, punchRadius, Vector2.right * Facing, punchHits, punchDistance, punchLayer) > 0) // maybe have active frames?
-        {
-            // IPunchable punchable punchHit.collider.GetComponent<IPunchable>();
-        }
 
         while (punchTimer > 0f) // recovery
         {
-            punchTimer -= Time.deltaTime;
-            yield return null;
+            while (punchTimer > punchRecovery) // startup
+            {
+                punchTimer -= Time.deltaTime;
+                yield return null;
+            }
+
+            if (Physics2D.CircleCastNonAlloc(Position2D, punchRadius, Vector2.right * Facing, punchHits, punchDistance, punchLayer) > 0) // maybe have active frames?
+            {
+                // IPunchable punchable punchHit.collider.GetComponent<IPunchable>();
+            }
+
+            while (punchTimer > 0f) // recovery
+            {
+                punchTimer -= Time.deltaTime;
+                yield return null;
+            }
         }
     }
 

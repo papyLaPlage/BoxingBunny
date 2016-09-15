@@ -183,13 +183,6 @@ public class ActorPhysics : MonoBehaviour {
     }
     public CastResult castResult = new CastResult();
 
-    public void CalculateCastOrigins()
-    {
-        mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
-        frontCastOrigin = mainCastOrigin - sizeY * HeadingY;
-        backCastOrigin = mainCastOrigin - sizeX * HeadingX;
-    }
-
     public void DebugDraw()
     {
         Debug.DrawLine(Position2D, mainCastOrigin, Color.black);
@@ -203,6 +196,8 @@ public class ActorPhysics : MonoBehaviour {
 
     public void ForwardCast()
     {
+        mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
+        frontCastOrigin = mainCastOrigin - sizeY * HeadingY;
         castResult.touched = true;
         if (Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.right * HeadingX, _mainHits, Mathf.Abs(movementVectorScaled.x) + boxOffset, solidCastLayer) > 0)
         {
@@ -242,6 +237,8 @@ public class ActorPhysics : MonoBehaviour {
 
     public void BackCast() // this one is more of an urgency cast, it should not be used every frame if possible
     {
+        mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
+        backCastOrigin = mainCastOrigin - sizeX * HeadingX;
         castResult.touched = true;
         if (Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.left * HeadingX, _secondHits, boxOffset, solidCastLayer) > 0)
         {
@@ -255,6 +252,8 @@ public class ActorPhysics : MonoBehaviour {
 
     public void DownCast()
     {
+        mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
+        backCastOrigin = mainCastOrigin - sizeX * HeadingX;
         castResult.touched = true;
         if (Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
         {
@@ -301,6 +300,8 @@ public class ActorPhysics : MonoBehaviour {
 
     public void UpCast()
     {
+        mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
+        backCastOrigin = mainCastOrigin - sizeX * HeadingX;
         castResult.touched = true;
         if (Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.up, _mainHits, boxOffset - movementVectorScaled.y, solidCastLayer) > 0)
         {

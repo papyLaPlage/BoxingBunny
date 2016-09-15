@@ -2,3 +2,4 @@
 -collider2Ds will call the trigger callbacks, event if not set as one!
 -button callbacks are called event after the LateUpdate!
 -casting is origin-inclusive, meaning you can't snap your position to his raw result.
+-UI button OnClick are called waaaay too late to be of any use in real-time gameplay.
