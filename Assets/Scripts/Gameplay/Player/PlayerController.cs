@@ -9,6 +9,11 @@ public class PlayerController : MonoBehaviour {
     private BoxCollider2D _collider;
     private ActorPhysics _physics;
 
+    [SerializeField]
+    private Transform _skin;
+    [SerializeField]
+    private Animator _anims;
+
     public Vector2 Position2D { get { return _transform.position; } }
 
     // Use this before initialization
@@ -28,6 +33,7 @@ public class PlayerController : MonoBehaviour {
 
         _physics.IsSliding = false;
         _physics.IsGrounded = false;
+        Facing = 1;
     }
 
     private Vector2 tempVector;
@@ -44,16 +50,21 @@ public class PlayerController : MonoBehaviour {
     void OnGrounded()
     {
         //StartCoroutine(GroundedUpdate());
+        _anims.Play("Idle");
     }
 
     void OnAirborne()
     {
+        
         StartCoroutine(AirborneUpdate());
+        _anims.Play("Airborne");
     }
 
     void OnSliding()
     {
         StartCoroutine(SlidingUpdate());
+        Facing = (int)_physics.HeadingX;
+        _anims.Play("Idle");
     }
 
     #endregion
@@ -65,6 +76,7 @@ public class PlayerController : MonoBehaviour {
     IEnumerator AirborneUpdate()
     {
         _physics.BackCast();
+        Facing = (int)_physics.HeadingX;
 
         while (!_physics.IsGrounded && !_physics.IsSliding)
         {
@@ -151,20 +163,7 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    #endregion
-
-    #region PUNCHING!
-
-    public void OnPunching(bool rightPunch)
-    {
-        Punch();
-    }
-    public void Punch()
-    {
-        
-    }
-
-    #endregion
+    #endregion 
 
 
     #region POINTING
@@ -193,9 +192,13 @@ public class PlayerController : MonoBehaviour {
             //Debug.Log((target - (Vector2)_transform.position)+" "+tempVector);
             _physics.IsGrounded = false;
         }
+        else if(punchTimer <= 0f)
+        {
+            OnPunching(target.x >= Position2D.x ? true : false);
+        }
     }
 
-    public void OnTouchingStay(Vector2 target)
+    public void OnTouchingStay(Vector2 target) // for air control
     {
         //MovementVector = (target - (Vector2)_transform.position).normalized;
     }
@@ -209,6 +212,74 @@ public class PlayerController : MonoBehaviour {
     {
         Debug.Log(co.name);
     }
+
+    #endregion
+
+
+    #region PUNCHING! + FACING
+
+    [Header("Punch Properties"), SerializeField]
+    private LayerMask punchLayer;
+    [SerializeField]
+    private float punchRadius;
+    [SerializeField]
+    private float punchDistance;
+    [SerializeField]
+    private float punchStartup;
+    [SerializeField]
+    private float punchRecovery;
+    private float punchTimer;
+    private RaycastHit2D[] punchHits;
+
+    public void OnPunching(bool rightPunch) // from the buttons
+    {
+        if (punchTimer <= 0f)
+        {
+            Facing = rightPunch ? 1 : -1;
+            StartCoroutine(Punch());
+        }
+        /*else {
+            //unavaible
+            // punchTimer -= Time.deltaTime; //accelerate the recovery a bit?
+        }*/
+    }
+
+    public IEnumerator Punch()
+    {
+        punchTimer = punchStartup + punchRecovery;
+        _anims.Play("PunchR");
+
+        while (punchTimer > punchRecovery) // startup
+        {
+            punchTimer -= Time.deltaTime;
+            yield return null;
+        }
+
+        if (Physics2D.CircleCastNonAlloc(Position2D, punchRadius, Vector2.right * Facing, punchHits, punchDistance, punchLayer) > 0) // maybe have active frames?
+        {
+            // IPunchable punchable punchHit.collider.GetComponent<IPunchable>();
+        }
+
+        while (punchTimer > 0f) // recovery
+        {
+            punchTimer -= Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private int Facing
+    {
+        get { return _facing; }
+        set
+        {
+            if (value != _facing)
+            {
+                _facing = value;
+                _skin.localScale = new Vector2(value, 1);
+            }
+        }
+    }
+    private int _facing;
 
     #endregion
 }
