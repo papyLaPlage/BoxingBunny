@@ -9,6 +9,11 @@ public class PlayerController : MonoBehaviour {
     private BoxCollider2D _collider;
     private ActorPhysics _physics;
 
+    [SerializeField]
+    private Transform _skin;
+    [SerializeField]
+    private Animator _anims;
+
     public Vector2 Position2D { get { return _transform.position; } }
 
     // Use this before initialization
@@ -28,6 +33,7 @@ public class PlayerController : MonoBehaviour {
 
         _physics.IsSliding = false;
         _physics.IsGrounded = false;
+        Facing = 1;
     }
 
     private Vector2 tempVector;
@@ -44,16 +50,21 @@ public class PlayerController : MonoBehaviour {
     void OnGrounded()
     {
         //StartCoroutine(GroundedUpdate());
+        _anims.Play("Idle");
     }
 
     void OnAirborne()
     {
+        Facing = (int)_physics.HeadingX;
         StartCoroutine(AirborneUpdate());
+        _anims.Play("Airborne");
     }
 
     void OnSliding()
     {
         StartCoroutine(SlidingUpdate());
+        Facing = (int)_physics.HeadingX;
+        _anims.Play("Sliding");
     }
 
     #endregion
@@ -62,17 +73,18 @@ public class PlayerController : MonoBehaviour {
     #region STATES/UPDATES
 
     // Update is called once per frame
+    bool airborneUpdateActive = false;
     IEnumerator AirborneUpdate()
     {
+        if (airborneUpdateActive)
+            yield break;
+        airborneUpdateActive = true;
+
         _physics.BackCast();
 
         while (!_physics.IsGrounded && !_physics.IsSliding)
         {
             _physics.ApplyGravity();
-
-            _physics.CalculateCastOrigins();
-
-            //_physics.DebugDraw();
 
             if (_physics.HeadingY < 0) // descending
             {
@@ -90,9 +102,7 @@ public class PlayerController : MonoBehaviour {
                         slidingAngle = _physics.castResult.normalAngle;
                         _physics.MovementVector = ((Vector2)(Quaternion.Euler(0, 0, slidingAngle * -_physics.castResult.heading) * (Vector2.right * _physics.castResult.heading))  + Vector2.down)* slidingSpeed;
                         _physics.IsSliding = true;
-                        Debug.DrawRay(Position2D, _physics.MovementVector, Color.red);
-                        //Debug.DrawRay(Position2D, Vector3.Cross(_physics.MovementVector, _physics.castResult.normal) * _physics.castResult.heading, Color.red); // this is the movement vector transformed to a sliding vector
-                        //_physics.MovementVector = Vector2.zero; //obtain the sliding vector
+                        //Debug.DrawRay(Position2D, _physics.MovementVector, Color.red);
                         //Debug.Break();
                     }
                 }
@@ -109,8 +119,12 @@ public class PlayerController : MonoBehaviour {
 
             _physics.ForwardCast();
 
+            //_physics.DebugDraw();
+
             yield return null;
         }
+
+        airborneUpdateActive = false;
     }
 
 
@@ -120,11 +134,6 @@ public class PlayerController : MonoBehaviour {
     {
         while (_physics.IsSliding)
         {
-            _physics.CalculateCastOrigins();
-
-            _physics.DebugDraw();
-            //Debug.Break();
-
             _physics.ForwardCast();
 
             _physics.DownCast();
@@ -147,24 +156,13 @@ public class PlayerController : MonoBehaviour {
                 _physics.IsSliding = false;
             }
 
+            //_physics.DebugDraw();
+
             yield return null;
         }
     }
 
-    #endregion
-
-    #region PUNCHING!
-
-    public void OnPunching(bool rightPunch)
-    {
-        Punch();
-    }
-    public void Punch()
-    {
-        
-    }
-
-    #endregion
+    #endregion 
 
 
     #region POINTING
@@ -193,9 +191,13 @@ public class PlayerController : MonoBehaviour {
             //Debug.Log((target - (Vector2)_transform.position)+" "+tempVector);
             _physics.IsGrounded = false;
         }
+        else if(punchTimer <= 0f)
+        {
+            OnPunching(target.x >= Position2D.x ? true : false);
+        }
     }
 
-    public void OnTouchingStay(Vector2 target)
+    public void OnTouchingStay(Vector2 target) // for air control
     {
         //MovementVector = (target - (Vector2)_transform.position).normalized;
     }
@@ -209,6 +211,78 @@ public class PlayerController : MonoBehaviour {
     {
         Debug.Log(co.name);
     }
+
+    #endregion
+
+
+    #region PUNCHING! + FACING
+
+    [Header("Punch Properties"), SerializeField]
+    private LayerMask punchLayer;
+    [SerializeField]
+    private float punchRadius;
+    [SerializeField]
+    private float punchDistance;
+    [SerializeField]
+    private float punchStartup;
+    [SerializeField]
+    private float punchRecovery;
+    private float punchTimer;
+    private RaycastHit2D[] punchHits;
+
+    public void OnPunching(bool rightPunch) // from the buttons
+    {
+        if (punchTimer <= 0f && !_physics.IsSliding)
+        {
+            Facing = rightPunch ? 1 : -1;
+            StartCoroutine(Punch());
+        }
+        /*else {
+            //unavaible
+            // punchTimer -= Time.deltaTime; //accelerate the recovery a bit?
+        }*/
+    }
+
+    IEnumerator Punch()
+    {
+        punchTimer = punchStartup + punchRecovery;
+        _anims.Play("PunchCooldown"); //hack-ish
+        _anims.Play("PunchR");
+
+        while (punchTimer > 0f) // recovery
+        {
+            while (punchTimer > punchRecovery) // startup
+            {
+                punchTimer -= Time.deltaTime;
+                yield return null;
+            }
+
+            if (Physics2D.CircleCastNonAlloc(Position2D, punchRadius, Vector2.right * Facing, punchHits, punchDistance, punchLayer) > 0) // maybe have active frames?
+            {
+                // IPunchable punchable punchHit.collider.GetComponent<IPunchable>();
+            }
+
+            while (punchTimer > 0f) // recovery
+            {
+                punchTimer -= Time.deltaTime;
+                yield return null;
+            }
+        }
+    }
+
+    private int Facing
+    {
+        get { return _facing; }
+        set
+        {
+            if (value != _facing)
+            {
+                _facing = value;
+                _skin.localScale = new Vector2(value, 1);
+            }
+        }
+    }
+    private int _facing;
 
     #endregion
 }

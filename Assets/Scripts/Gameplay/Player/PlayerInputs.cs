@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class PlayerInputs : MonoBehaviour
 {
@@ -49,14 +50,19 @@ public class PlayerInputs : MonoBehaviour
 			button.interactable = state;
 	}
 
-	#endregion
+    #endregion
 
 
-	#region BUTTON INPUTS
+    #region BUTTON INPUTS
 
-	public void OnPunchClicked(bool rightPunch)
+    [SerializeField]
+    private GameObject rightPunchButton;
+    [SerializeField]
+    private GameObject leftPunchButton;
+
+    public void OnPunchClicked(bool rightPunch)
 	{
-		//_player.OnPunching(rightPunch);
+		_player.OnPunching(rightPunch);
 	}
 
 	#endregion
@@ -69,16 +75,34 @@ public class PlayerInputs : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		if (Input.GetMouseButton(0))
-		{
-			clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
-			if (Input.GetMouseButtonDown(0))
-			{ // first frame touching
-				_player.OnTouchingStart(clickPosition);
-			}
-			else
-				_player.OnTouchingStay(clickPosition);
-		}
+        if (Input.GetMouseButton(0))
+        {
+            
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (EventSystem.current.currentSelectedGameObject == rightPunchButton)
+                    {
+                        _player.OnPunching(true);
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject == leftPunchButton)
+                    {
+                        _player.OnPunching(false);
+                    }
+                }
+            }
+            else
+            {
+                clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
+                if (Input.GetMouseButtonDown(0))
+                { // first frame touching
+                    _player.OnTouchingStart(clickPosition);
+                }
+                else
+                    _player.OnTouchingStay(clickPosition);
+            }
+        }
 	}
 
 	#endregion
