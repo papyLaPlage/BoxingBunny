@@ -14,35 +14,39 @@ public class Camera2D : MonoBehaviour
 
 	public void SetTarget(Transform targetTransforme)
 	{
-		IFollowA = !IFollowA;
 		targets = targetTransforme.GetComponents<Camera2DLogic>();
 
 		if (targets.Length == 0)
 		{
 			Debug.Log("Aucun Camera2DLogic dans la cible");
 		}
-		else if (IFollowA)
-		{
-			pointA.decalage = Vector2.zero;
-			foreach (Camera2DLogic i in targets)
-			{
-				pointA.decalage += i.decalage;
-			}
-		}
 		else
 		{
-			pointB.decalage = Vector2.zero;
+			IFollowA = !IFollowA;
+
+			if (IFollowA)
+			{
+				point = pointA;
+			}
+			else
+			{
+				point = pointB;
+			}
+
+			point.position = targetTransforme.transform.position;
+			point.decalage = Vector2.zero;
+
 			foreach (Camera2DLogic i in targets)
 			{
-				pointB.decalage += i.decalage;
+				point.decalage += i.decalage;
 			}
 		}
 	}
 
-	private void Start()
+	private void Awake()
 	{
-		pointA = gameObject.AddComponent<Point2D>();
-		pointB = gameObject.AddComponent<Point2D>();
+		pointA = new Point2D();
+		pointB = new Point2D();
 	}
 
 	private void LateUpdate()
@@ -71,4 +75,14 @@ public class Camera2D : MonoBehaviour
 		nPosition.z = transform.position.z;
 		transform.position = nPosition;
 	}
+
+#if UNITY_EDITOR
+
+	void OnDrawGizmos()
+	{
+		Vector3 playerPos = GameObject.FindGameObjectWithTag("Player").transform.position;
+		playerPos.z = transform.position.z;
+		transform.position = playerPos;
+	}
+#endif
 }
