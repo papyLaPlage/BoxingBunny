@@ -17,9 +17,9 @@ public static class Easing
 		switch(type)
 		{
 			case EasingType.Step:
-				return linearStep < 0.5 ? 0 : 1;
+				return linearStep < .5f ? 0 : 1;
 			case EasingType.Linear:
-				return (float)linearStep;
+				return linearStep;
 			case EasingType.Sine:
 				return Sine.EaseIn(linearStep);
 			case EasingType.Quadratic:
@@ -42,9 +42,9 @@ public static class Easing
 		switch(type)
 		{
 			case EasingType.Step:
-				return linearStep < 0.5 ? 0 : 1;
+				return linearStep < .5f ? 0 : 1;
 			case EasingType.Linear:
-				return (float)linearStep;
+				return linearStep;
 			case EasingType.Sine:
 				return Sine.EaseOut(linearStep);
 			case EasingType.Quadratic:
@@ -72,9 +72,9 @@ public static class Easing
 		switch(type)
 		{
 			case EasingType.Step:
-				return linearStep < 0.5 ? 0 : 1;
+				return linearStep < .5f ? 0 : 1;
 			case EasingType.Linear:
-				return (float)linearStep;
+				return linearStep;
 			case EasingType.Sine:
 				return Sine.EaseInOut(linearStep);
 			case EasingType.Quadratic:

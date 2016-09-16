@@ -3,8 +3,10 @@ using System.Collections;
 
 public class PlayerControllerH : MonoBehaviour
 {
-
+	//TO DO
 	//platforme traversable
+
+	public EasingType ease = EasingType.Linear;
 
 
 	#region SETUP
@@ -88,6 +90,7 @@ public class PlayerControllerH : MonoBehaviour
 					float pourcent = jumpTimer / jumpTime;
 
 					Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+					pourcent = Easing.EaseInOut(pourcent, ease);
 					transitionPositionBefore.y += JumpHeight * Mathf.Sin(Mathf.PI * pourcent);
 
 					jumpTimer += Time.deltaTime;
@@ -95,6 +98,7 @@ public class PlayerControllerH : MonoBehaviour
 					pourcent = jumpTimer / jumpTime;
 
 					Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+					pourcent = Easing.EaseInOut(pourcent, ease);
 					transitionPosition.y += JumpHeight * Mathf.Sin(Mathf.PI * pourcent);
 
 					//Appli mouvement
@@ -325,34 +329,53 @@ public class PlayerControllerH : MonoBehaviour
 
 		Gizmos.DrawWireSphere(transform.position, DistanceJumpMax);
 
+		Gizmos.color = Color.red;
+		Gizmos.DrawWireSphere(positionBeforeJump, DistanceJumpMax);
 
 
 		Gizmos.color = Color.black;
 
-		Vector3 origine = transform.position, start, end;
-		origine.y += 20;
-		start = origine;
+		Vector2 start = positionBeforeJump, end;
 
-		float sizeX = 20f;
-		float sizeY = 10f;
-
-		for(float i = 0; i <= 1; i+=0.01f)
+		for(float i = 0, j; i <= 1; i += 0.01f)
 		{
-			end = origine;
-			end.y += Easing.EaseInOut(i, EasingType.Elastic) * sizeY;
-			end.x += i * sizeX;
+			end = Vector2.Lerp(positionBeforeJump, positionTargetJump, i);
+			j = Easing.EaseInOut(i, ease);
+			end.y += JumpHeight * Mathf.Sin(Mathf.PI * j);
 
 			Gizmos.DrawLine(start, end);
 
 			start = end;
 		}
 
+		/*
+				
 
-		Gizmos.DrawLine(origine, new Vector3(origine.x, origine.y + sizeY, origine.z));
-		Gizmos.DrawLine(origine, new Vector3(origine.x + sizeX, origine.y, origine.z));
-		Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x, origine.y + sizeY, origine.z));
-		Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x + sizeX, origine.y, origine.z));
+			Vector3 origine = transform.position, start, end;
+			origine.y += 20;
+			start = origine;
 
+			float sizeX = 20f;
+			float sizeY = 10f;
+
+			for(float i = 0; i <= 1; i+=0.01f)
+			{
+				end = origine;
+				end.y += Easing.EaseInOut(i, EasingType.Elastic) * sizeY;
+				end.x += i * sizeX;
+
+				Gizmos.DrawLine(start, end);
+
+				start = end;
+			}
+
+
+
+			Gizmos.DrawLine(origine, new Vector3(origine.x, origine.y + sizeY, origine.z));
+			Gizmos.DrawLine(origine, new Vector3(origine.x + sizeX, origine.y, origine.z));
+			Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x, origine.y + sizeY, origine.z));
+			Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x + sizeX, origine.y, origine.z));
+			*/
 
 
 	}
