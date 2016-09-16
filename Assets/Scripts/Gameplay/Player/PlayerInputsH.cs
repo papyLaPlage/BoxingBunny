@@ -17,7 +17,7 @@ public class PlayerInputsH : MonoBehaviour
 		}
 		set
 		{
-			if (value == null)
+			if(value == null)
 			{
 				ActivateControls(false);
 			}
@@ -43,7 +43,7 @@ public class PlayerInputsH : MonoBehaviour
 	void ActivateControls(bool state)
 	{
 		enabled = state;
-		foreach (Button button in GetComponentsInChildren<Button>())
+		foreach(Button button in GetComponentsInChildren<Button>())
 			button.interactable = state;
 	}
 
@@ -52,7 +52,6 @@ public class PlayerInputsH : MonoBehaviour
 
 	#region BUTTON INPUTS
 
-	bool test = false;
 	public void OnPunchClicked(bool rightPunch)
 	{
 		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControllerH>();
@@ -65,17 +64,14 @@ public class PlayerInputsH : MonoBehaviour
 	#region ONSCREEN INPUTS
 
 	private Vector2 clickPosition;
-	
+
 	void Update()
 	{
-		if (Input.GetMouseButton(0))
+		if(Input.GetMouseButton(0))
 		{
-			if (test)
-				Debug.Log(test);
-			test = false;
 
 			clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition - (Vector3.forward * Camera.main.transform.position.z)); //getting target position for player
-			if (Input.GetMouseButtonDown(0))
+			if(Input.GetMouseButtonDown(0))
 			{ // first frame touching
 				_player.OnTouchingStart(clickPosition);
 			}

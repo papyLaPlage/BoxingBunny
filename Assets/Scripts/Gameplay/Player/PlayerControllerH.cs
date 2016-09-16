@@ -4,17 +4,20 @@ using System.Collections;
 public class PlayerControllerH : MonoBehaviour
 {
 
+	//platforme traversable
+
+
 	#region SETUP
 
 	private Transform _transform;
-	private BoxCollider2D _collider;
+	//private BoxCollider2D _collider;
 	private Rigidbody2D _rigidbody2D;
 
 	// Use this for initialization
 	void Awake()
 	{
 		_transform = GetComponent<Transform>();
-		_collider = GetComponent<BoxCollider2D>();
+		//_collider = GetComponent<BoxCollider2D>();
 		_rigidbody2D = GetComponent<Rigidbody2D>();
 
 		gravityScaleOrigine = _rigidbody2D.gravityScale;
@@ -27,9 +30,11 @@ public class PlayerControllerH : MonoBehaviour
 
 	private Vector2 positionBeforeJump;
 	private Vector2 positionTargetJump;
+	//private Vector2 transitionPosition = Vector2.zero;
 
 	private float jumpTime = 1;
 	private float jumpTimer = 0;
+	private float gravityScaleOrigine = 2;
 
 	private enum States
 	{
@@ -45,102 +50,88 @@ public class PlayerControllerH : MonoBehaviour
 
 	private Collider2D[] colliders;
 
-	private float gravityScaleOrigine = 2;
-
-	private Vector2 transitionPosition = Vector2.zero;
-
-	public float JumpMaxY = 10;
-	public float JumpMinY = 2;
-	public float JumpYDistanceFactor = 0.5f;
-	public float MovePower = 30;
-
-
 	void FixedUpdate()
 	{
-		switch (state)
+		switch(state)
 		{
 			case States.Falling:
 			case States.Grounded:
 
-			_rigidbody2D.gravityScale = gravityScaleOrigine;
-			state = States.Falling;
+				_rigidbody2D.gravityScale = gravityScaleOrigine;
+				state = States.Falling;
 
-			colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.down * 0.75f, 0.5f, groundCastLayer);
-			for (int i = 0; i < colliders.Length; i++)
-			{
-				if (colliders[i].gameObject != gameObject)
-					state = States.Grounded;
-			}
+				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.down * 0.75f, 0.5f, groundCastLayer);
+				for(int i = 0; i < colliders.Length; i++)
+				{
+					if(colliders[i].gameObject != gameObject)
+						state = States.Grounded;
+				}
 
-			if (_rigidbody2D.velocity.y > 0)
-			{
-				_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 0);
-			}
+				if(_rigidbody2D.velocity.y > 0)
+				{
+					_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 0);
+				}
 
-			break;
+				break;
 
 			case States.Jumping:
-			
-			if (jumpTimer >= jumpTime)
-			{
-				state = States.Falling;
-				_rigidbody2D.velocity = Vector2.down * 20f;
-			}
-			else
-			{
-				_rigidbody2D.gravityScale = 0;
 
-				float pourcent = jumpTimer / jumpTime;
-
-				Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-				transitionPositionBefore.y +=
-					Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * JumpYDistanceFactor, JumpMinY, JumpMaxY)
-					* Mathf.Sin(Mathf.PI * pourcent);
-
-				jumpTimer += Time.deltaTime;
-
-				pourcent = jumpTimer / jumpTime;
-
-				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-				transitionPosition.y += 
-					Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * JumpYDistanceFactor, JumpMinY, JumpMaxY) 
-					* Mathf.Sin(Mathf.PI * pourcent);
-
-				//Appli mouvement
-				//_rigidbody2D.MovePosition(transitionPosition);
-				_rigidbody2D.velocity = (transitionPosition - transitionPositionBefore) * MovePower;
-
-				//collition Avant
-				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
-				for (int i = 0; i < colliders.Length; i++)
+				if(jumpTimer >= jumpTime)
 				{
-					if (colliders[i].gameObject != gameObject)
+					state = States.Falling;
+					_rigidbody2D.velocity = Vector2.down * 20f;
+				}
+				else
+				{
+					_rigidbody2D.gravityScale = 0;
+
+					float pourcent = jumpTimer / jumpTime;
+
+					Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+					transitionPositionBefore.y += JumpHeight * Mathf.Sin(Mathf.PI * pourcent);
+
+					jumpTimer += Time.deltaTime;
+
+					pourcent = jumpTimer / jumpTime;
+
+					Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
+					transitionPosition.y += JumpHeight * Mathf.Sin(Mathf.PI * pourcent);
+
+					//Appli mouvement
+					//_rigidbody2D.MovePosition(transitionPosition);
+					_rigidbody2D.velocity = (transitionPosition - transitionPositionBefore) * MovePower;
+
+					//collition Avant
+					colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
+					for(int i = 0; i < colliders.Length; i++)
 					{
-						state = States.Falling;
-						_rigidbody2D.velocity = Vector2.down * 20f;
-						break;
+						if(colliders[i].gameObject != gameObject)
+						{
+							state = States.Falling;
+							_rigidbody2D.velocity = Vector2.down * 20f;
+							break;
+						}
+					}
+
+					//collistion Au-dessus
+					colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
+					for(int i = 0; i < colliders.Length; i++)
+					{
+						if(colliders[i].gameObject != gameObject)
+						{
+							//state = States.Falling;
+							//_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
+
+							if(pourcent < 0.5f)
+							{
+								jumpTimer = jumpTime * (1 - pourcent);
+							}
+							break;
+						}
 					}
 				}
 
-				//collistion Au-dessus
-				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
-				for (int i = 0; i < colliders.Length; i++)
-				{
-					if (colliders[i].gameObject != gameObject)
-					{
-						//state = States.Falling;
-						//_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
-
-						if (pourcent < 0.5f)
-						{
-							jumpTimer = jumpTime * (1 - pourcent);
-						}
-						break;
-					}	
-				}
-			}
-
-			break;
+				break;
 
 		}
 	}
@@ -166,94 +157,117 @@ public class PlayerControllerH : MonoBehaviour
 
 	#region MOVING
 
-	private float LimiteYTestedForJump;
-	private RaycastHit2D hitRightDown, hitLeftDown, hitStartUp, hitEndUp;
+	private RaycastHit2D hitRightDown, hitLeftDown;
 
-	public float TimeJumpMax = 0.8f;
-	public float TimeJumpMin = 0.2f;
-	public float TimeFactorJumpDistance = 0.2f;
+	[SerializeField]
+	private float MovePower = 30;
+	[SerializeField]
+	private float JumpMaxY = 10;
+	[SerializeField]
+	private float JumpMinY = 2;
+	[SerializeField]
+	private float JumpYDistanceFactor = 0.5f;
+	private float JumpHeight;
+
+	[SerializeField]
+	private float TimeJumpMax = 0.8f;
+	[SerializeField]
+	private float TimeJumpMin = 0.2f;
+	[SerializeField]
+	private float TimeFactorJumpDistance = 0.2f;
+	[SerializeField]
+	private float DistanceJumpMax = 7;
+
+	[SerializeField]
+	Vector2 DecalJumpTarget = new Vector2(0, 1.4f);
 
 	public void OnTouchingStart(Vector2 target)
 	{
-		if (state == States.Grounded)
+		if(state == States.Grounded)
 		{
 			state = States.Jumping;
 			jumpTimer = 0;
 
-			transitionPosition = _transform.position;
+			Vector2 transitionPosition = positionBeforeJump = _transform.position;
 
-			Vector2 targetDown = target + Vector2.down * 6.5f;
-			Vector2 Up = Vector2.up * 6.5f;
-			Vector2 VectorRight = Vector2.right * 0.5f;
-			Vector2 VectorLeft = Vector2.left * 0.5f;
-
-			hitRightDown = Physics2D.Linecast(target + VectorRight, targetDown + VectorRight, groundCastLayer);
-			hitLeftDown = Physics2D.Linecast(target + VectorLeft, targetDown + VectorLeft, groundCastLayer);
-
-			float positionTargetJumpRight;
-
-			if (hitRightDown.collider != null && hitRightDown.transform.tag == "ground")
+			//capte distance de saut
+			if(Vector2.Distance(target, _transform.position) > DistanceJumpMax)
 			{
-				positionTargetJumpRight = hitRightDown.point.y;
+				target = (Vector2)_transform.position + (target - (Vector2)_transform.position).normalized * DistanceJumpMax;
+			}
+
+			//ne saute pas plus bas
+			if(target.y < _transform.position.y)
+			{
+				positionTargetJump.Set(target.x, _transform.position.y);
+
+#if UNITY_EDITOR
+				gizLineC = gizLineA = positionTargetJump;
+				gizLineD = gizLineB = target;
+#endif
 			}
 			else
 			{
-				positionTargetJumpRight = _transform.position.y;
+				Vector2 targetDown = new Vector2(target.x, _transform.position.y);
+
+				Vector2 VectorRight = Vector2.right * 0.5f;
+				Vector2 VectorLeft = Vector2.left * 0.5f;
+
+				hitRightDown = Physics2D.Linecast(target + VectorRight, targetDown + VectorRight, groundCastLayer);
+				hitLeftDown = Physics2D.Linecast(target + VectorLeft, targetDown + VectorLeft, groundCastLayer);
+
+				float positionTargetJumpRight;
+
+				if(hitRightDown.collider != null && hitRightDown.transform.tag == "ground")
+				{
+					positionTargetJumpRight = hitRightDown.point.y;
+#if UNITY_EDITOR
+					gizLineB.y = hitRightDown.point.y;
+#endif
+				}
+				else
+				{
+					positionTargetJumpRight = _transform.position.y;
+#if UNITY_EDITOR
+					gizLineB.y = targetDown.y;
+#endif
+				}
+
+				float positionTargetJumpLeft;
+
+				if(hitLeftDown.collider != null && hitLeftDown.transform.tag == "ground")
+				{
+					positionTargetJumpLeft = hitLeftDown.point.y;
+#if UNITY_EDITOR
+					gizLineD.y = hitLeftDown.point.y;
+#endif
+				}
+				else
+				{
+					positionTargetJumpLeft = _transform.position.y;
+#if UNITY_EDITOR
+					gizLineD.y = targetDown.y;
+#endif
+				}
+
+				positionTargetJump.Set(target.x, Mathf.Max(_transform.position.y, Mathf.Max(positionTargetJumpRight, positionTargetJumpLeft)));
+
+#if UNITY_EDITOR
+				gizLineA = target + VectorRight;
+				gizLineB.x = targetDown.x + VectorRight.x;
+
+				gizLineC = target + VectorLeft;
+				gizLineD.x = targetDown.x + VectorLeft.x;
+#endif
 			}
 
-			float positionTargetJumpLeft;
-
-			if (hitLeftDown.collider != null && hitLeftDown.transform.tag == "ground")
-			{
-				positionTargetJumpLeft = hitLeftDown.point.y;
-			}
-			else
-			{
-				positionTargetJumpLeft = _transform.position.y;
-			}
-
-			positionBeforeJump = _transform.position;
-
-			positionTargetJump.x = target.x;
-			positionTargetJump.y = positionTargetJumpRight > positionTargetJumpLeft ? positionTargetJumpRight : positionTargetJumpLeft;
-			positionTargetJump.y += 1.4f;
+			positionTargetJump += DecalJumpTarget;
 
 			Flip(positionBeforeJump.x < positionTargetJump.x);
 
+			//Calcul des paramètres du saut: hauteur et temps
+			JumpHeight = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * JumpYDistanceFactor, JumpMinY, JumpMaxY);
 			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * TimeFactorJumpDistance, TimeJumpMin, TimeJumpMax);
-
-			/*
-			//test hauteur au début du saut
-			float limiteYStart = 10, limiteYEnd = 10;
-			hitStartUp = Physics2D.Linecast(_transform.position, Up + (Vector2)_transform.position, groundCastLayer);
-
-			if (hitStartUp.collider != null && hitStartUp.transform.tag == "ground")
-			{
-				limiteYStart = hitStartUp.point.y - _transform.position.y;
-			}
-
-			//test hauteur à la fin du saut
-			hitEndUp = Physics2D.Linecast(target, Up + target, groundCastLayer);
-			if (hitEndUp.collider != null && hitEndUp.transform.tag == "ground")
-			{
-				limiteYEnd = hitEndUp.point.y - target.y;
-			}
-
-			LimiteYTestedForJump = Mathf.Min(limiteYStart, limiteYEnd) - 1.25f;*/
-
-#if UNITY_EDITOR
-			gizLineA = target + VectorRight;
-			//gizLineB.x = gizLineA.x;
-			//gizLineB.y = hitRightDown.point.y;
-			gizLineB = targetDown + VectorRight;
-			gizLineB.y = hitRightDown.point.y;
-
-			gizLineC = target + VectorLeft;
-			//gizLineD.x = gizLineC.x;
-			//gizLineD.y = hitLeftDown.point.y;
-			gizLineD = targetDown + VectorLeft;
-			gizLineD.y = hitLeftDown.point.y;
-#endif
 		}
 	}
 
@@ -294,10 +308,10 @@ public class PlayerControllerH : MonoBehaviour
 
 #if UNITY_EDITOR
 
-	Vector2 gizLineA;
-	Vector2 gizLineB;
-	Vector2 gizLineC;
-	Vector2 gizLineD;
+	private Vector2 gizLineA;
+	private Vector2 gizLineB;
+	private Vector2 gizLineC;
+	private Vector2 gizLineD;
 	void OnDrawGizmos()
 	{
 		Gizmos.color = Color.red;
@@ -307,6 +321,40 @@ public class PlayerControllerH : MonoBehaviour
 		Gizmos.color = Color.magenta;
 		Gizmos.DrawLine(positionTargetJump + Vector2.right, positionTargetJump + Vector2.left);
 		Gizmos.DrawLine(positionTargetJump + Vector2.up, positionTargetJump + Vector2.down);
+
+
+		Gizmos.DrawWireSphere(transform.position, DistanceJumpMax);
+
+
+
+		Gizmos.color = Color.black;
+
+		Vector3 origine = transform.position, start, end;
+		origine.y += 20;
+		start = origine;
+
+		float sizeX = 20f;
+		float sizeY = 10f;
+
+		for(float i = 0; i <= 1; i+=0.01f)
+		{
+			end = origine;
+			end.y += Easing.EaseInOut(i, EasingType.Elastic) * sizeY;
+			end.x += i * sizeX;
+
+			Gizmos.DrawLine(start, end);
+
+			start = end;
+		}
+
+
+		Gizmos.DrawLine(origine, new Vector3(origine.x, origine.y + sizeY, origine.z));
+		Gizmos.DrawLine(origine, new Vector3(origine.x + sizeX, origine.y, origine.z));
+		Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x, origine.y + sizeY, origine.z));
+		Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x + sizeX, origine.y, origine.z));
+
+
+
 	}
 #endif
 }

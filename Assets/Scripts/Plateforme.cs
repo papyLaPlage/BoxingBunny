@@ -5,16 +5,17 @@ public class Plateforme : MonoBehaviour
 {
 	private Transform _transforme;
 	private Vector2 originePosition;
+
 	//pour calculer le déplacement effectuer à donner aux objets sur la plateforme
 	private Vector2 lastPosition;
 
 	private ArrayList objetsToSupport = new ArrayList();
 
 	private uint nextPoint, pointsLength;
+	[SerializeField]
+	private bool inverseDirection = false;
 
-	public bool inverseDirection = false;
-
-	public enum Comportement
+	private enum Comportement
 	{
 		Loop,
 		GoAndReturn,
@@ -22,16 +23,19 @@ public class Plateforme : MonoBehaviour
 		Teleport
 	}
 
-	public Comportement comportent;
-
-	public uint startPoint = 0;
-
-	public float stopTime = 0;
 	[SerializeField]
+	private Comportement comportent;
+	[SerializeField]
+	private uint startPoint = 0;
+	[SerializeField]
+	private float stopTime = 0;
 	private float stopTimer = 0;
-
-	public float speed = 1;
-	public Vector2[] points = new Vector2[2];
+	[SerializeField]
+	private float decalTime = 0;
+	[SerializeField]
+	private float speed = 1;
+	[SerializeField]
+	private Vector2[] points = new Vector2[2];
 
 #if UNITY_EDITOR
 	private bool isPlay = false;
@@ -40,16 +44,16 @@ public class Plateforme : MonoBehaviour
 
 	void Awake()
 	{
-		if (points.Length < 2)
+		if(points.Length < 2)
 		{
 			Destroy(this);
 		}
 
-		switch (comportent)
+		switch(comportent)
 		{
 			case Comportement.Teleport:
-			Destroy(GetComponent<EdgeCollider2D>());
-			break;
+				Destroy(GetComponent<EdgeCollider2D>());
+				break;
 		}
 	}
 
@@ -60,7 +64,7 @@ public class Plateforme : MonoBehaviour
 		pointsLength = (uint)points.Length;
 
 		//save des position exacte
-		for (int i = 0; i < pointsLength; i++)
+		for(int i = 0; i < pointsLength; i++)
 		{
 			points[i] = points[i] + originePosition;
 		}
@@ -71,6 +75,7 @@ public class Plateforme : MonoBehaviour
 
 		_transforme.position = points[startPoint];
 
+		stopTimer = decalTime;
 
 #if UNITY_EDITOR
 		isPlay = true;
@@ -79,50 +84,50 @@ public class Plateforme : MonoBehaviour
 
 	void Update()
 	{
-		if (stopTimer <= 0)
+		if(stopTimer <= 0)
 		{
 			lastPosition = _transforme.position;
 
-			switch (comportent)
+			switch(comportent)
 			{
 				default:
 				case Comportement.Loop:
-				_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
+					_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
 
-				if ((Vector2)_transforme.position == points[nextPoint])
-				{
-					nextPoint = GetNextObjectif();
-					stopTimer = stopTime;
-				}
+					if((Vector2)_transforme.position == points[nextPoint])
+					{
+						nextPoint = GetNextObjectif();
+						stopTimer = stopTime;
+					}
 
-				MoveObjets();
-				break;
+					MoveObjets();
+					break;
 
 				case Comportement.Teleport:
-				_transforme.position = points[nextPoint];
-				nextPoint = GetNextObjectif();
-				stopTimer = stopTime;
-				break;
+					_transforme.position = points[nextPoint];
+					nextPoint = GetNextObjectif();
+					stopTimer = stopTime;
+					break;
 
 				case Comportement.GoAndTeleport:
 
-				if (nextPoint == 0 || nextPoint == pointsLength - 1 && inverseDirection)
-				{
-					_transforme.position = points[nextPoint];
-				}
-				else
-				{
-					_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
-					MoveObjets();
-				}
+					if(nextPoint == 0 || nextPoint == pointsLength - 1 && inverseDirection)
+					{
+						_transforme.position = points[nextPoint];
+					}
+					else
+					{
+						_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
+						MoveObjets();
+					}
 
 
-				if ((Vector2)_transforme.position == points[nextPoint])
-				{
-					nextPoint = GetNextObjectif();
-					stopTimer = stopTime;
-				}
-				break;
+					if((Vector2)_transforme.position == points[nextPoint])
+					{
+						nextPoint = GetNextObjectif();
+						stopTimer = stopTime;
+					}
+					break;
 			}
 		}
 		else
@@ -132,7 +137,7 @@ public class Plateforme : MonoBehaviour
 	void MoveObjets()
 	{
 		Vector3 move = _transforme.position - (Vector3)lastPosition;
-		foreach (Transform objet in objetsToSupport)
+		foreach(Transform objet in objetsToSupport)
 		{
 			objet.position += move;
 		}
@@ -140,38 +145,38 @@ public class Plateforme : MonoBehaviour
 
 	uint GetNextObjectif()
 	{
-		if (inverseDirection)
+		if(inverseDirection)
 		{
-			if (nextPoint == 0)
-				switch (comportent)
+			if(nextPoint == 0)
+				switch(comportent)
 				{
 					default:
 					case Comportement.Loop:
 					case Comportement.GoAndTeleport:
 					case Comportement.Teleport:
-					return pointsLength - 1;
+						return pointsLength - 1;
 
 					case Comportement.GoAndReturn:
-					inverseDirection = !inverseDirection;
-					return nextPoint + 1;
+						inverseDirection = !inverseDirection;
+						return nextPoint + 1;
 				}
 			else
 				return nextPoint - 1;
 		}
 		else
 		{
-			if (nextPoint == pointsLength - 1)
-				switch (comportent)
+			if(nextPoint == pointsLength - 1)
+				switch(comportent)
 				{
 					default:
 					case Comportement.Loop:
 					case Comportement.GoAndTeleport:
 					case Comportement.Teleport:
-					return 0;
+						return 0;
 
 					case Comportement.GoAndReturn:
-					inverseDirection = !inverseDirection;
-					return nextPoint - 1;
+						inverseDirection = !inverseDirection;
+						return nextPoint - 1;
 				}
 			else
 				return nextPoint + 1;
@@ -182,7 +187,7 @@ public class Plateforme : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D co)
 	{
-		if (objetsToSupport.IndexOf(co.transform) == -1)
+		if(objetsToSupport.IndexOf(co.transform) == -1)
 		{
 			objetsToSupport.Add(co.transform);
 		}
@@ -198,16 +203,16 @@ public class Plateforme : MonoBehaviour
 	public float drawSize = 0.5f;
 	void OnDrawGizmos()
 	{
-		if (points.Length > 1)
+		if(points.Length > 1)
 		{
 			int L = points.Length - 1;
 			Vector2 transPosition;
-			if (isPlay)
+			if(isPlay)
 				transPosition = Vector2.zero;
 			else
 				transPosition = transform.position;
 
-			if (inverseDirection)
+			if(inverseDirection)
 			{
 				Gizmos.color = Color.blue;
 			}
@@ -216,7 +221,7 @@ public class Plateforme : MonoBehaviour
 				Gizmos.color = Color.cyan;
 			}
 
-			for (int i = 0; i < L; i++)
+			for(int i = 0; i < L; i++)
 			{
 				Gizmos.DrawWireSphere(transPosition + points[i], drawSize);
 				Gizmos.DrawLine(transPosition + points[i], transPosition + points[i + 1]);
@@ -224,7 +229,7 @@ public class Plateforme : MonoBehaviour
 
 			Gizmos.DrawWireSphere(transPosition + points[L], drawSize);
 
-			if (comportent != Comportement.GoAndReturn)
+			if(comportent != Comportement.GoAndReturn)
 			{
 				Gizmos.DrawLine(transPosition + points[0], transPosition + points[L]);
 			}

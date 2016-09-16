@@ -16,7 +16,7 @@ public class Camera2D : MonoBehaviour
 	{
 		targets = targetTransforme.GetComponents<Camera2DLogic>();
 
-		if (targets.Length == 0)
+		if(targets.Length == 0)
 		{
 			Debug.Log("Aucun Camera2DLogic dans la cible");
 		}
@@ -24,7 +24,7 @@ public class Camera2D : MonoBehaviour
 		{
 			IFollowA = !IFollowA;
 
-			if (IFollowA)
+			if(IFollowA)
 			{
 				point = pointA;
 			}
@@ -36,7 +36,7 @@ public class Camera2D : MonoBehaviour
 			point.position = targetTransforme.transform.position;
 			point.decalage = Vector2.zero;
 
-			foreach (Camera2DLogic i in targets)
+			foreach(Camera2DLogic i in targets)
 			{
 				point.decalage += i.decalage;
 			}
@@ -56,9 +56,9 @@ public class Camera2D : MonoBehaviour
 	private void LateUpdate()
 	{
 
-		if (IFollowA)
+		if(IFollowA)
 		{
-			foreach (Camera2DLogic i in targets)
+			foreach(Camera2DLogic i in targets)
 			{
 				i.UpdatePoint(ref pointA);
 
@@ -67,7 +67,7 @@ public class Camera2D : MonoBehaviour
 		}
 		else
 		{
-			foreach (Camera2DLogic i in targets)
+			foreach(Camera2DLogic i in targets)
 			{
 				i.UpdatePoint(ref pointB);
 
@@ -84,11 +84,11 @@ public class Camera2D : MonoBehaviour
 	bool isPlay = false;
 	void OnDrawGizmos()
 	{
-		if (!isPlay)
+		if(!isPlay)
 		{
-		Vector3 playerPos = GameObject.FindGameObjectWithTag("Player").transform.position;
-		playerPos.z = transform.position.z;
-		transform.position = playerPos;
+			Vector3 playerPos = GameObject.FindGameObjectWithTag("Player").transform.position;
+			playerPos.z = transform.position.z;
+			transform.position = playerPos;
 		}
 	}
 #endif

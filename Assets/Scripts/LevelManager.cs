@@ -2,7 +2,8 @@
 using System.Collections;
 using UnityEngine.SceneManagement;
 
-public class LevelManager : MonoBehaviour {
+public class LevelManager : MonoBehaviour
+{
 
 	private Transform player, mainCamera;
 
@@ -16,9 +17,10 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	void Update () {
+	void Update()
+	{
 
-		if (player.position.y < -10)
+		if(player.position.y < -10)
 		{
 			SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		}
