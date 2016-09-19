@@ -106,31 +106,36 @@ public class PlayerControllerH : MonoBehaviour
 					_rigidbody2D.velocity = (transitionPosition - transitionPositionBefore) * MovePower;
 
 					//collition Avant
-					colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
-					for(int i = 0; i < colliders.Length; i++)
+					if(pourcent > 0.5f)
 					{
-						if(colliders[i].gameObject != gameObject)
+						colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
+						for(int i = 0; i < colliders.Length; i++)
 						{
-							state = States.Falling;
-							_rigidbody2D.velocity = Vector2.down * 20f;
-							break;
+							if(colliders[i].gameObject != gameObject)
+							{
+								state = States.Falling;
+								_rigidbody2D.velocity = Vector2.down * 20f;
+								break;
+							}
 						}
 					}
 
 					//collistion Au-dessus
-					colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
-					for(int i = 0; i < colliders.Length; i++)
+					if(pourcent < 0.5f)
 					{
-						if(colliders[i].gameObject != gameObject)
+						colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.up * 0.75f, 0.2f, groundCastLayer);
+						for(int i = 0; i < colliders.Length; i++)
 						{
-							//state = States.Falling;
-							//_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
-
-							if(pourcent < 0.5f)
+							if(colliders[i].gameObject != gameObject)
 							{
+								//state = States.Falling;
+								//_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
+
+
 								jumpTimer = jumpTime * (1 - pourcent);
+
+								break;
 							}
-							break;
 						}
 					}
 				}
@@ -270,8 +275,8 @@ public class PlayerControllerH : MonoBehaviour
 			Flip(positionBeforeJump.x < positionTargetJump.x);
 
 			//Calcul des paramètres du saut: hauteur et temps
-			JumpHeight = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * JumpYDistanceFactor, JumpMinY, JumpMaxY);
-			jumpTime = Mathf.Clamp(Mathf.Abs(positionTargetJump.x - positionBeforeJump.x) * TimeFactorJumpDistance, TimeJumpMin, TimeJumpMax);
+			JumpHeight = Mathf.Clamp(Mathf.Abs(Vector2.Distance(positionTargetJump, positionBeforeJump)) * JumpYDistanceFactor, JumpMinY, JumpMaxY);
+			jumpTime = Mathf.Clamp(Mathf.Abs(Vector2.Distance(positionTargetJump, positionBeforeJump)) * TimeFactorJumpDistance, TimeJumpMin, TimeJumpMax);
 		}
 	}
 
