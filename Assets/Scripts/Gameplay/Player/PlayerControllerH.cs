@@ -52,21 +52,23 @@ public class PlayerControllerH : MonoBehaviour
 
 	private Collider2D[] colliders;
 
+	public AnimationCurve jumpCurve;
+
 	void FixedUpdate()
 	{
 		switch(state)
 		{
 			case States.Falling:
-			case States.Grounded:
-
 				_rigidbody2D.gravityScale = gravityScaleOrigine;
-				state = States.Falling;
-
 				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.down * 0.75f, 0.5f, groundCastLayer);
 				for(int i = 0; i < colliders.Length; i++)
 				{
 					if(colliders[i].gameObject != gameObject)
+					{
 						state = States.Grounded;
+						_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
+						break;
+					}
 				}
 
 				if(_rigidbody2D.velocity.y > 0)
@@ -76,49 +78,50 @@ public class PlayerControllerH : MonoBehaviour
 
 				break;
 
+			case States.Grounded:
+
+				_rigidbody2D.gravityScale = 0;
+				state = States.Falling;
+
+				colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.down * 0.75f, 0.5f, groundCastLayer);
+				for(int i = 0; i < colliders.Length; i++)
+				{
+					if(colliders[i].gameObject != gameObject)
+					{
+						state = States.Grounded;
+						break;
+					}
+				}
+
+				_rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
+
+				break;
+
 			case States.Jumping:
 
-				if(jumpTimer >= jumpTime)
+				jumpTimer += Time.deltaTime;
+
+				if(jumpTimer > jumpTime)
 				{
 					state = States.Falling;
-					_rigidbody2D.velocity = Vector2.down * 20f;
+					Vector2 velocity = Vector2.down * 20f;
+					//_rigidbody2D.velocity = Vector2.down * 20f;
 				}
 				else
 				{
 					_rigidbody2D.gravityScale = 0;
 
 					float pourcent = jumpTimer / jumpTime;
+					float pourcentBefor = Mathf.Max((jumpTimer - Time.deltaTime) / jumpTime, 0);
 
-					Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-					pourcent = Easing.EaseInOut(pourcent, ease);
-					transitionPositionBefore.y += JumpHeight * Mathf.Sin(Mathf.PI * pourcent);
-
-					jumpTimer += Time.deltaTime;
-
-					pourcent = jumpTimer / jumpTime;
+					Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcentBefor);
+					transitionPositionBefore.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(pourcentBefor, ease));
 
 					Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-					pourcent = Easing.EaseInOut(pourcent, ease);
-					transitionPosition.y += JumpHeight * Mathf.Sin(Mathf.PI * pourcent);
+					transitionPosition.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(pourcent, ease));
 
 					//Appli mouvement
-					//_rigidbody2D.MovePosition(transitionPosition);
 					_rigidbody2D.velocity = (transitionPosition - transitionPositionBefore) * MovePower;
-
-					//collition Avant
-					if(pourcent > 0.5f)
-					{
-						colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
-						for(int i = 0; i < colliders.Length; i++)
-						{
-							if(colliders[i].gameObject != gameObject)
-							{
-								state = States.Falling;
-								_rigidbody2D.velocity = Vector2.down * 20f;
-								break;
-							}
-						}
-					}
 
 					//collistion Au-dessus
 					if(pourcent < 0.5f)
@@ -128,20 +131,27 @@ public class PlayerControllerH : MonoBehaviour
 						{
 							if(colliders[i].gameObject != gameObject)
 							{
-								//state = States.Falling;
-								//_rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x/2, -20);
-
-
 								jumpTimer = jumpTime * (1 - pourcent);
-
+								break;
+							}
+						}
+					}
+					//collition Avant
+					else
+					{
+						colliders = Physics2D.OverlapCircleAll((Vector2)_transform.position + Vector2.right * 0.75f * _transform.localScale.x, 0.2f, groundCastLayer);
+						for(int i = 0; i < colliders.Length; i++)
+						{
+							if(colliders[i].gameObject != gameObject)
+							{
+								state = States.Falling;
+								//_rigidbody2D.velocity = Vector2.down * 20f;
 								break;
 							}
 						}
 					}
 				}
-
 				break;
-
 		}
 	}
 
@@ -197,7 +207,7 @@ public class PlayerControllerH : MonoBehaviour
 			state = States.Jumping;
 			jumpTimer = 0;
 
-			Vector2 transitionPosition = positionBeforeJump = _transform.position;
+			positionBeforeJump = _transform.position;
 
 			//capte distance de saut
 			if(Vector2.Distance(target, _transform.position) > DistanceJumpMax)
@@ -321,68 +331,69 @@ public class PlayerControllerH : MonoBehaviour
 	private Vector2 gizLineB;
 	private Vector2 gizLineC;
 	private Vector2 gizLineD;
+	private Vector2 lastVelocity;
+
 	void OnDrawGizmos()
 	{
+		//LineCast
 		Gizmos.color = Color.red;
 		Gizmos.DrawLine(gizLineA, gizLineB);
 		Gizmos.DrawLine(gizLineC, gizLineD);
 
+		//atterisage
 		Gizmos.color = Color.magenta;
 		Gizmos.DrawLine(positionTargetJump + Vector2.right, positionTargetJump + Vector2.left);
 		Gizmos.DrawLine(positionTargetJump + Vector2.up, positionTargetJump + Vector2.down);
 
-
+		//Distance Jump
 		Gizmos.DrawWireSphere(transform.position, DistanceJumpMax);
 
+		//Last Distance Jump
 		Gizmos.color = Color.red;
 		Gizmos.DrawWireSphere(positionBeforeJump, DistanceJumpMax);
 
-
+		//Jump transition
 		Gizmos.color = Color.black;
-
-		Vector2 start = positionBeforeJump, end;
-
-		for(float i = 0, j; i <= 1; i += 0.01f)
+		Vector2 start = positionBeforeJump, end = Vector2.zero;
+		for(float i = 0; i <= 1; i += 0.01f)
 		{
 			end = Vector2.Lerp(positionBeforeJump, positionTargetJump, i);
-			j = Easing.EaseInOut(i, ease);
-			end.y += JumpHeight * Mathf.Sin(Mathf.PI * j);
+			end.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(i, ease));
 
 			Gizmos.DrawLine(start, end);
 
 			start = end;
 		}
 
+		start = Vector2.Lerp(positionBeforeJump, positionTargetJump, 0.95f);
+		start.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(0.95f, ease));
+
+		Gizmos.DrawLine(start, start + (end - start).normalized * 15);
+
 		/*
-				
+		Vector3 origine = transform.position, start, end;
+		origine.y += 20;
+		start = origine;
 
-			Vector3 origine = transform.position, start, end;
-			origine.y += 20;
-			start = origine;
+		float sizeX = 20f;
+		float sizeY = 10f;
 
-			float sizeX = 20f;
-			float sizeY = 10f;
+		for(float i = 0; i <= 1; i+=0.01f)
+		{
+			end = origine;
+			end.y += Easing.EaseInOut(i, EasingType.Elastic) * sizeY;
+			end.x += i * sizeX;
 
-			for(float i = 0; i <= 1; i+=0.01f)
-			{
-				end = origine;
-				end.y += Easing.EaseInOut(i, EasingType.Elastic) * sizeY;
-				end.x += i * sizeX;
+			Gizmos.DrawLine(start, end);
 
-				Gizmos.DrawLine(start, end);
+			start = end;
+		}
 
-				start = end;
-			}
-
-
-
-			Gizmos.DrawLine(origine, new Vector3(origine.x, origine.y + sizeY, origine.z));
-			Gizmos.DrawLine(origine, new Vector3(origine.x + sizeX, origine.y, origine.z));
-			Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x, origine.y + sizeY, origine.z));
-			Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x + sizeX, origine.y, origine.z));
-			*/
-
-
+		Gizmos.DrawLine(origine, new Vector3(origine.x, origine.y + sizeY, origine.z));
+		Gizmos.DrawLine(origine, new Vector3(origine.x + sizeX, origine.y, origine.z));
+		Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x, origine.y + sizeY, origine.z));
+		Gizmos.DrawLine(new Vector3(origine.x + sizeX, origine.y + sizeY, origine.z), new Vector3(origine.x + sizeX, origine.y, origine.z));
+		*/
 	}
 #endif
 }
