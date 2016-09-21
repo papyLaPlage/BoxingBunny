@@ -4,20 +4,25 @@ using UnityEngine.SceneManagement;
 
 public class TestLevelManager : MonoBehaviour {
 
-    public static TestLevelManager Instance;
+    //public static TestLevelManager Instance;
     public string[] levels;
 
-    void Awake()
+    /*void Awake()
     {
         Instance = this;
-    }
+    }*/
 
     public void GoToLevel(int levelID)
     {
-        SceneManager.LoadScene(levelID);
+        SceneManager.LoadScene(levels[levelID]);
     }
     public void GoToLevel(string levelID)
     {
         SceneManager.LoadScene(levelID);
+    }
+
+    public void Quit()
+    {
+        Application.Quit();
     }
 }
