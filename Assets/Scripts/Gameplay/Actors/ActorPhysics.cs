@@ -64,7 +64,7 @@ public class ActorPhysics : MonoBehaviour {
     }
     private Vector2 _movementVector; // used to know the next movement, unscaled
     private Vector2 movementVectorCaped;
-    private Vector2 movementVectorScaled;
+	public Vector2 movementVectorScaled;
 
     public float HeadingX
     {

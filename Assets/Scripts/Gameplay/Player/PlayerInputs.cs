@@ -11,7 +11,7 @@ public class PlayerInputs : MonoBehaviour
 	private Transform _transform;
 	//private PlayerInputs _inputs;
 
-	public PlayerController Player
+	public PlayerControllerFus Player
 	{
 		get
 		{
@@ -30,7 +30,7 @@ public class PlayerInputs : MonoBehaviour
 			}
 		}
 	}
-	private PlayerController _player;
+	private PlayerControllerFus _player;
 
 	void Awake()
 	{
@@ -40,7 +40,7 @@ public class PlayerInputs : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControllerFus>();
         StartInputSampling();
     }
 
