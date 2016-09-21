@@ -34,6 +34,8 @@ public class PlayerController : MonoBehaviour {
         _physics.IsSliding = false;
         _physics.IsGrounded = false;
         Facing = 1;
+
+        Camera.main.GetComponent<Camera2D>().SetTarget(_transform);
     }
 
     private Vector2 tempVector;
@@ -171,6 +173,8 @@ public class PlayerController : MonoBehaviour {
     private float maxDistance;
     [SerializeField]
     private float minHop;
+    [SerializeField, Range(0f, 2f)]
+    private float touchOffset;
     [Header("Movement Properties"), SerializeField]
     private float jumpImpulsion;
     [SerializeField]
@@ -184,7 +188,7 @@ public class PlayerController : MonoBehaviour {
     {
         if (_physics.IsGrounded)
         {
-            tempVector = Vector2.ClampMagnitude((target - (Vector2)_transform.position), maxDistance);
+            tempVector = Vector2.ClampMagnitude((target - (Vector2)_transform.position), maxDistance) + Vector2.up * touchOffset;
             tempVector.y = Mathf.Max(minHop, tempVector.y * jumpImpulsion + minHop);
             tempVector.x *= speed;
             _physics.MovementVector = tempVector;
