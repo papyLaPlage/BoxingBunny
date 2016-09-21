@@ -72,7 +72,6 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void OnAirborne()
 	{
-		Facing = (int)_physics.HeadingX;
 		StartCoroutine(AirborneUpdate());
 		_anims.Play("Airborne");
 	}
@@ -110,6 +109,7 @@ public class PlayerControllerFus : MonoBehaviour
 
 				if(_physics.HeadingY <= 0) // descending
 				{
+					Debug.Log("Jump: " + jumpTimer);
 					_physics.DownCast();
 					if(_physics.castResult.touched)
 					{
@@ -276,8 +276,9 @@ public class PlayerControllerFus : MonoBehaviour
 	{
 		if(_physics.IsGrounded)
 		{
-			_physics.IsGrounded = false;
 			jumpTimer = 0;
+
+			Facing = (int)Mathf.Sign(target.x - _transform.position.x);
 
 			positionBeforeJump = _transform.position;
 
@@ -365,6 +366,8 @@ public class PlayerControllerFus : MonoBehaviour
 			//Calcul des paramètres du saut: hauteur et temps
 			JumpHeight = Mathf.Clamp(Mathf.Abs(Vector2.Distance(positionTargetJump, positionBeforeJump)) * JumpYDistanceFactor, JumpMinY, JumpMaxY);
 			jumpTime = Mathf.Clamp(Mathf.Abs(Vector2.Distance(positionTargetJump, positionBeforeJump)) * TimeFactorJumpDistance, TimeJumpMin, TimeJumpMax);
+
+			_physics.IsGrounded = false;
 		}
 		else if(punchTimer <= 0f)
 		{
