@@ -56,13 +56,7 @@ public class PlayerControllerFus : MonoBehaviour
 	private float jumpTimer = 2;
 
 	[SerializeField]
-	private EasingType ease = EasingType.Linear;
-
-	[SerializeField]
 	private LayerMask groundCastLayer;
-
-	[SerializeField]
-	private AnimationCurve jumpCurve;
 
 	private void OnGrounded()
 	{
@@ -109,7 +103,6 @@ public class PlayerControllerFus : MonoBehaviour
 
 				if(_physics.HeadingY <= 0) // descending
 				{
-					Debug.Log("Jump: " + jumpTimer);
 					_physics.DownCast();
 					if(_physics.castResult.touched)
 					{
@@ -145,14 +138,14 @@ public class PlayerControllerFus : MonoBehaviour
 				float pourcentBefor = Mathf.Max((jumpTimer - Time.deltaTime) / jumpTime, 0);
 
 				Vector2 transitionPositionBefore = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcentBefor);
-				transitionPositionBefore.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(pourcentBefor, ease));
+				transitionPositionBefore.y += JumpHeight * jumpCurve.Evaluate(pourcentBefor);
 
 				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
-				transitionPosition.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(pourcent, ease));
+				transitionPosition.y += JumpHeight * jumpCurve.Evaluate(pourcent);
 
 				//Appli mouvement
-				_physics.MovementVector = (transitionPosition - transitionPositionBefore) * MovePower;
-				_physics.movementVectorScaled = (transitionPosition - transitionPositionBefore);
+				_physics.MovementVector = (transitionPosition - transitionPositionBefore) * MovePower / Time.deltaTime;
+				//_physics.movementVectorScaled = (transitionPosition - transitionPositionBefore);
 
 
 				//ascending
@@ -245,12 +238,16 @@ public class PlayerControllerFus : MonoBehaviour
 	private RaycastHit2D hitRightDown, hitLeftDown;
 
 	[Header("Jump Properties")]
+	//[SerializeField]
+	//private EasingType ease = EasingType.Linear;
 	[SerializeField]
-	private float MovePower = 30;
+	private AnimationCurve jumpCurve;
+	[SerializeField]
+	private float MovePower = 1;
 	[SerializeField]
 	private float JumpMaxY = 10;
 	[SerializeField]
-	private float JumpMinY = 2;
+	private float JumpMinY = 1;
 	[SerializeField]
 	private float JumpYDistanceFactor = 0.5f;
 	private float JumpHeight;
@@ -263,11 +260,14 @@ public class PlayerControllerFus : MonoBehaviour
 	private float TimeFactorJumpDistance = 0.2f;
 	[SerializeField]
 	private float DistanceJumpMax = 7;
+
+	[Header("Target Jump Properties")]
+	[SerializeField]
+	private bool groundedJump = true;
 	[SerializeField]
 	[Range(-5,0)]
 	private float LimiteMaxDownJump = 0;
-	[SerializeField]
-	private bool groundedJump = true;
+
 
 	[SerializeField]
 	Vector2 DecalJumpTarget = new Vector2(0, 1.4f);
@@ -500,17 +500,18 @@ public class PlayerControllerFus : MonoBehaviour
 		for(float i = 0; i <= 1; i += 0.01f)
 		{
 			end = Vector2.Lerp(positionBeforeJump, positionTargetJump, i);
-			end.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(i, ease));
+			end.y += JumpHeight * jumpCurve.Evaluate(i);
 
 			Gizmos.DrawLine(start, end);
 
 			start = end;
 		}
 
-		//Pronostique de direction près le saut 
+		//Pronostique de direction près le saut
+		Gizmos.color = Color.red;
 		start = Vector2.Lerp(positionBeforeJump, positionTargetJump, 0.999f);
-		start.y += JumpHeight * jumpCurve.Evaluate(Easing.EaseInOut(0.999f, ease));
-		Gizmos.DrawLine(start, start + (end - start).normalized * 15);
+		start.y += JumpHeight * jumpCurve.Evaluate(0.999f);
+		Gizmos.DrawLine(start, start + (end - start).normalized * 2);
 	}
 #endif
 	#endregion
