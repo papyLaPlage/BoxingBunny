@@ -160,7 +160,8 @@ public class PlayerControllerFus : MonoBehaviour
 
 						if(pourcent < 0.5f)
 						{
-							jumpTimer = jumpTime * (1 - pourcent);
+							//jumpTimer = jumpTime * (1 - pourcent);
+							jumpTimer = 2;
 						}
 					}
 				}
