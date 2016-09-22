@@ -61,7 +61,7 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void OnGrounded()
 	{
-		//StartCoroutine(GroundedUpdate());
+		StartCoroutine(GroundedUpdate());
 		_anims.Play("Idle");
 	}
 
@@ -84,13 +84,13 @@ public class PlayerControllerFus : MonoBehaviour
 	#region STATES/UPDATES
 
 	// Update is called once per frame
-	private bool airborneUpdateActive = false;
+	//private bool airborneUpdateActive = false;
 	private IEnumerator AirborneUpdate()
 	{
-		if(airborneUpdateActive)
+		/*if(airborneUpdateActive)
 			yield break;
 
-		airborneUpdateActive = true;
+		airborneUpdateActive = true;*/
 
 		_physics.BackCast();
 
@@ -178,7 +178,7 @@ public class PlayerControllerFus : MonoBehaviour
 			yield return null;
 		}
 
-		airborneUpdateActive = false;
+		//airborneUpdateActive = false;
 	}
 
 	private void DescendingCheck()
@@ -234,12 +234,27 @@ public class PlayerControllerFus : MonoBehaviour
 		}
 	}
 
-	#endregion
+    IEnumerator GroundedUpdate()
+    {
+        _physics.ApplyGravity();
+        while (_physics.IsGrounded)
+        {
+            //_physics.ForwardCast();
+
+            _physics.DownCast();
+            if (!_physics.castResult.touched)
+                _physics.IsGrounded = false;
+
+            yield return null;
+        }
+    }
+
+    #endregion
 
 
-	#region POINTING
+    #region POINTING
 
-	[Header("Movement Properties"),SerializeField, Range(1, 89)]
+    [Header("Movement Properties"),SerializeField, Range(1, 89)]
 	private float walkableAngle;
 	[SerializeField]
 	private float slidingSpeed;
