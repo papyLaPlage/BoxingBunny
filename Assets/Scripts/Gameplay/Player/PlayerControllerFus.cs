@@ -61,12 +61,13 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void OnGrounded()
 	{
-		StartCoroutine(GroundedUpdate());
+        StartCoroutine(GroundedUpdate());
 		_anims.Play("Idle");
 	}
 
 	private void OnAirborne()
 	{
+        slidingAngle = 0f;
 		StartCoroutine(AirborneUpdate());
 		_anims.Play("Airborne");
 	}
@@ -82,21 +83,20 @@ public class PlayerControllerFus : MonoBehaviour
 
 
 	#region STATES/UPDATES
-
-	// Update is called once per frame
-	//private bool airborneUpdateActive = false;
-	private IEnumerator AirborneUpdate()
+	
+	private bool airborneUpdateActive = false; // avoid frame-perfect double AirborneUpdate
+    private IEnumerator AirborneUpdate()
 	{
-		/*if(airborneUpdateActive)
+		if(airborneUpdateActive)
 			yield break;
 
-		airborneUpdateActive = true;*/
+		airborneUpdateActive = true;
 
 		_physics.BackCast();
 
 		while(!_physics.IsGrounded && !_physics.IsSliding)
 		{
-			jumpTimer += Time.deltaTime;
+            jumpTimer += Time.deltaTime;
 
 			if(jumpTimer > jumpTime)
 			{
@@ -104,24 +104,8 @@ public class PlayerControllerFus : MonoBehaviour
 
 				if(_physics.HeadingY <= 0) // descending
 				{
-					_physics.DownCast();
-					if(_physics.castResult.touched)
-					{
-						if(_physics.castResult.normalAngle <= walkableAngle)
-						{
-							_physics.MovementVector = Vector2.zero;
-							_physics.IsGrounded = true;
-
-						}
-						else if(_physics.castResult.normalAngle < 90)
-						{
-							slidingAngle = _physics.castResult.normalAngle;
-							_physics.MovementVector = ((Vector2)(Quaternion.Euler(0, 0, slidingAngle * -_physics.castResult.heading) * (Vector2.right * _physics.castResult.heading)) + Vector2.down) * slidingSpeed;
-							_physics.IsSliding = true;
-
-						}
-					}
-				}
+                    DownCheck();
+                }
 				else // ascending 
 				{
 					_physics.UpCast();
@@ -131,7 +115,8 @@ public class PlayerControllerFus : MonoBehaviour
 						tempVector.y = -tempVector.y;
 						_physics.MovementVector = tempVector;
 					}
-				}
+                    _physics.ForwardCast();
+                }
 			}
 			else
 			{
@@ -148,11 +133,13 @@ public class PlayerControllerFus : MonoBehaviour
 				_physics.MovementVector = Time.deltaTime > 0f ? (transitionPosition - transitionPositionBefore) * MovePower / Time.deltaTime : Vector2.zero;
 				//_physics.movementVectorScaled = (transitionPosition - transitionPositionBefore);
 
-
-				//ascending
-				if(_physics.HeadingY > 0)
+				if(_physics.HeadingY < 0) //descending
 				{
-					_physics.UpCast();
+					DownCheck();
+                }
+				else //ascending
+				{
+                    _physics.UpCast();
 					if(_physics.castResult.touched)
 					{
 						Vector2 tempVector = _physics.MovementVector;
@@ -165,42 +152,38 @@ public class PlayerControllerFus : MonoBehaviour
 							jumpTimer = 2;
 						}
 					}
-				}
-				//descending
-				else
-				{
-					DescendingCheck();
+                    _physics.ForwardCast();
 				}
 			}
 
-			_physics.ForwardCast();
-
-			yield return null;
+            yield return null;
 		}
 
-		//airborneUpdateActive = false;
+		airborneUpdateActive = false;
 	}
 
-	private void DescendingCheck()
+	private void DownCheck()
 	{
 		_physics.DownCast();
-		if(_physics.castResult.touched)
+        
+        if (_physics.castResult.touched)
 		{
-			if(_physics.castResult.normalAngle <= walkableAngle)
+            if (_physics.castResult.normalAngle <= walkableAngle)
 			{
-				_physics.MovementVector = Vector2.zero;
+                _physics.MovementVector = Vector2.zero;
 				_physics.IsGrounded = true;
-
-			}
-			else if(_physics.castResult.normalAngle < 90)
+            }
+			else if(_physics.castResult.normalAngle < 90 && _physics.castResult.normalAngle != slidingAngle)
 			{
-				slidingAngle = _physics.castResult.normalAngle;
-				_physics.MovementVector = ((Vector2)(Quaternion.Euler(0, 0, slidingAngle * -_physics.castResult.heading) * (Vector2.right * _physics.castResult.heading)) + Vector2.down) * slidingSpeed;
-				_physics.IsSliding = true;
-
+                slidingAngle = _physics.castResult.normalAngle;
+                _physics.MovementVector = new Vector2(_physics.castResult.normal.y * _physics.castResult.heading, Mathf.Abs(_physics.castResult.normal.x)*-1) * slidingSpeed;
+                _physics.ApplyGravity();
+                _physics.IsSliding = true;
 			}
 		}
-	}
+        else
+            _physics.ForwardCast();
+    }
 
 
 	private float slidingAngle; // use this to know if we should recalculate the MovementVector
@@ -209,28 +192,16 @@ public class PlayerControllerFus : MonoBehaviour
 	{
 		while(_physics.IsSliding)
 		{
-			_physics.ForwardCast();
+            _physics.ForwardCast();
 
-			_physics.DownCast();
-			if(_physics.castResult.touched)
-			{
-				if(_physics.castResult.normalAngle <= walkableAngle)
-				{
-					_physics.IsGrounded = true;
-					_physics.MovementVector = Vector2.zero;
-				}
-				else if(_physics.castResult.normalAngle < 90 && _physics.castResult.normalAngle != slidingAngle)
-				{
-					slidingAngle = _physics.castResult.normalAngle;
-					_physics.MovementVector = ((Vector2)(Quaternion.Euler(0, 0, slidingAngle * -_physics.castResult.heading) * (Vector2.right * _physics.castResult.heading)) + Vector2.down) * slidingSpeed;
-				}
-			}
-			else
-			{
-				_physics.IsSliding = false;
-			}
+            DownCheck();
+            if (!_physics.castResult.touched)
+            {
+                _physics.IsSliding = false;
+                slidingAngle = 0f;
+            }    
 
-			yield return null;
+            yield return null;
 		}
 	}
 
