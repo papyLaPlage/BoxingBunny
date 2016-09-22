@@ -137,6 +137,7 @@ public class Plateforme : MonoBehaviour
 		Vector3 move = _transforme.position - (Vector3)lastPosition;
 		foreach(Transform objet in objetsToSupport)
 		{
+			Debug.Log("MoveObjets");
 			objet.position += move;
 		}
 	}
