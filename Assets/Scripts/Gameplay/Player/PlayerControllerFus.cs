@@ -149,12 +149,19 @@ public class PlayerControllerFus : MonoBehaviour
 
 
 				//ascending
-				if(pourcent <= 0.5f)
+				if(_physics.HeadingY > 0)
 				{
 					_physics.UpCast();
 					if(_physics.castResult.touched)
 					{
-						jumpTimer = jumpTime * (1 - pourcent);
+						Vector2 tempVector = _physics.MovementVector;
+						tempVector.y = -tempVector.y;
+						_physics.MovementVector = tempVector;
+
+						if(pourcent < 0.5f)
+						{
+							jumpTimer = jumpTime * (1 - pourcent);
+						}
 					}
 				}
 				//descending
