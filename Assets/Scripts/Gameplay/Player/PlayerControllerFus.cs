@@ -144,8 +144,8 @@ public class PlayerControllerFus : MonoBehaviour
 				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
 				transitionPosition.y += JumpHeight * jumpCurve.Evaluate(pourcent);
 
-				//Appli mouvement
-				_physics.MovementVector = (transitionPosition - transitionPositionBefore) * MovePower / Time.deltaTime;
+                //Appli mouvement
+				_physics.MovementVector = Time.deltaTime > 0f ? (transitionPosition - transitionPositionBefore) * MovePower / Time.deltaTime : Vector2.zero;
 				//_physics.movementVectorScaled = (transitionPosition - transitionPositionBefore);
 
 
