@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Plateforme : MonoBehaviour
 {
@@ -9,7 +10,8 @@ public class Plateforme : MonoBehaviour
 	//pour calculer le déplacement effectuer à donner aux objets sur la plateforme
 	private Vector2 lastPosition;
 
-	private ArrayList objetsToSupport = new ArrayList();
+    [HideInInspector]
+	public List<Transform> carriedObjects = new List<Transform>();
 
 	private uint lastPoint, nextPoint, pointsLength;
 	[SerializeField]
@@ -135,9 +137,9 @@ public class Plateforme : MonoBehaviour
 	void MoveObjets()
 	{
 		Vector3 move = _transforme.position - (Vector3)lastPosition;
-		foreach(Transform objet in objetsToSupport)
+		foreach(Transform objet in carriedObjects)
 		{
-			Debug.Log("MoveObjets");
+			//Debug.Log("MoveObjets");
 			objet.position += move;
 		}
 	}
@@ -193,18 +195,7 @@ public class Plateforme : MonoBehaviour
 	}
 
 
-	void OnTriggerEnter2D(Collider2D co)
-	{
-		if(objetsToSupport.IndexOf(co.transform) == -1)
-		{
-			objetsToSupport.Add(co.transform);
-		}
-	}
-
-	void OnTriggerExit2D(Collider2D co)
-	{
-		objetsToSupport.Remove(co.transform);
-	}
+    
 
 #if UNITY_EDITOR
 
