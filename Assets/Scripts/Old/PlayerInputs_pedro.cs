@@ -2,14 +2,14 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class PlayerInputsH : MonoBehaviour
+public class PlayerInputs_pedro : MonoBehaviour
 {
 
 	#region SETUP
 
 	//private Transform _transform;
 
-	public PlayerControllerH Player
+	public PlayerController_pedro Player
 	{
 		get
 		{
@@ -28,7 +28,7 @@ public class PlayerInputsH : MonoBehaviour
 			}
 		}
 	}
-	private PlayerControllerH _player;
+	private PlayerController_pedro _player;
 
 	void Awake()
 	{
@@ -37,7 +37,7 @@ public class PlayerInputsH : MonoBehaviour
 
 	void Start()
 	{
-		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControllerH>();
+		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController_pedro>();
 	}
 
 	void ActivateControls(bool state)
@@ -54,7 +54,7 @@ public class PlayerInputsH : MonoBehaviour
 
 	public void OnPunchClicked(bool rightPunch)
 	{
-		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControllerH>();
+		Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController_pedro>();
 		_player.OnPunching(rightPunch);
 	}
 

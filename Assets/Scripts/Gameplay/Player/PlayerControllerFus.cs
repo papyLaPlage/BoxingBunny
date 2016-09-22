@@ -396,7 +396,7 @@ public class PlayerControllerFus : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D co)
     {
-        Debug.Log(co.name);
+        //Debug.Log(co.name);
         co.GetComponent<ITrigger>().OnPlayerEnter(this);
     }
     void OnTriggerExit2D(Collider2D co)

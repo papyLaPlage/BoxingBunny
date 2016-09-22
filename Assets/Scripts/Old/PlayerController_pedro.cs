@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerControllerH : MonoBehaviour
+public class PlayerController_pedro : MonoBehaviour
 {
 	//TO DO
 	//platforme traversable
