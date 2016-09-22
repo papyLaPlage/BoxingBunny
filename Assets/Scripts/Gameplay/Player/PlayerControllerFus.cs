@@ -8,7 +8,8 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private Transform _transform;
 	//private BoxCollider2D _collider;
-	private ActorPhysics _physics;
+    [HideInInspector]
+	public ActorPhysics _physics;
 
 	[SerializeField]
 	private Transform _skin;
@@ -388,22 +389,28 @@ public class PlayerControllerFus : MonoBehaviour
 		//MovementVector = (target - (Vector2)_transform.position).normalized;
 	}
 
-	#endregion
+    #endregion
 
 
-	#region TRIGGER REACTIONS
+    #region TRIGGER REACTIONS
 
-	void OnTriggerEnter2D(Collider2D co)
-	{
-		Debug.Log(co.name);
-	}
+    void OnTriggerEnter2D(Collider2D co)
+    {
+        //Debug.Log(co.name);
+        co.GetComponent<ITrigger>().OnPlayerEnter(this);
+    }
+    void OnTriggerExit2D(Collider2D co)
+    {
+        //Debug.Log(co.name);
+        co.GetComponent<ITrigger>().OnPlayerExit(this);
+    }
 
-	#endregion
+    #endregion
 
 
-	#region PUNCHING! + FACING
+    #region PUNCHING! + FACING
 
-	[Header("Punch Properties"), SerializeField]
+    [Header("Punch Properties"), SerializeField]
 	private LayerMask punchLayer;
 	[SerializeField]
 	private float punchRadius;
