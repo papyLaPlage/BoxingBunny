@@ -11,7 +11,7 @@ public class Plateforme : MonoBehaviour
 
 	private ArrayList objetsToSupport = new ArrayList();
 
-	private uint nextPoint, pointsLength;
+	private uint lastPoint, nextPoint, pointsLength;
 	[SerializeField]
 	private bool inverseDirection = false;
 
@@ -40,7 +40,6 @@ public class Plateforme : MonoBehaviour
 #if UNITY_EDITOR
 	private bool isPlay = false;
 #endif
-
 
 	void Awake()
 	{
@@ -71,7 +70,7 @@ public class Plateforme : MonoBehaviour
 
 		startPoint = (uint)Mathf.Min(startPoint, points.Length - 1);
 		nextPoint = startPoint;
-		nextPoint = GetNextObjectif();
+		GetNextObjectif();
 
 		_transforme.position = points[startPoint];
 
@@ -92,12 +91,13 @@ public class Plateforme : MonoBehaviour
 			{
 				default:
 				case Comportement.Loop:
-					_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
 
-					if((Vector2)_transforme.position == points[nextPoint])
+					moveTimer += Time.deltaTime;
+					_transforme.position = Vector2.Lerp(points[lastPoint], points[nextPoint], moveTimer / moveTime);
+
+					if(moveTimer >= moveTime)
 					{
-						nextPoint = GetNextObjectif();
-						stopTimer = stopTime;
+						GetNextObjectif();
 					}
 
 					MoveObjets();
@@ -105,30 +105,28 @@ public class Plateforme : MonoBehaviour
 
 				case Comportement.Teleport:
 					_transforme.position = points[nextPoint];
-					nextPoint = GetNextObjectif();
-					stopTimer = stopTime;
+					GetNextObjectif();
 					break;
 
 				case Comportement.GoAndTeleport:
-
 					if(nextPoint == 0 || nextPoint == pointsLength - 1 && inverseDirection)
 					{
 						_transforme.position = points[nextPoint];
 					}
 					else
 					{
-						_transforme.position = Vector2.MoveTowards(_transforme.position, points[nextPoint], Time.deltaTime * speed);
+						moveTimer += Time.deltaTime;
+						_transforme.position = Vector2.Lerp(points[lastPoint], points[nextPoint], moveTimer / moveTime);
 						MoveObjets();
-					}
 
-
-					if((Vector2)_transforme.position == points[nextPoint])
-					{
-						nextPoint = GetNextObjectif();
-						stopTimer = stopTime;
+						if(moveTimer >= moveTime)
+						{
+							GetNextObjectif();
+						}
 					}
 					break;
 			}
+
 		}
 		else
 			stopTimer -= Time.deltaTime;
@@ -139,12 +137,17 @@ public class Plateforme : MonoBehaviour
 		Vector3 move = _transforme.position - (Vector3)lastPosition;
 		foreach(Transform objet in objetsToSupport)
 		{
+			Debug.Log("MoveObjets");
 			objet.position += move;
 		}
 	}
 
-	uint GetNextObjectif()
+	float moveTimer, moveTime;
+
+	void GetNextObjectif()
 	{
+		lastPoint = nextPoint;
+
 		if(inverseDirection)
 		{
 			if(nextPoint == 0)
@@ -154,14 +157,15 @@ public class Plateforme : MonoBehaviour
 					case Comportement.Loop:
 					case Comportement.GoAndTeleport:
 					case Comportement.Teleport:
-						return pointsLength - 1;
-
+						nextPoint--;
+						break;
 					case Comportement.GoAndReturn:
 						inverseDirection = !inverseDirection;
-						return nextPoint + 1;
+						nextPoint++;
+						break;
 				}
 			else
-				return nextPoint - 1;
+				nextPoint--;
 		}
 		else
 		{
@@ -172,16 +176,20 @@ public class Plateforme : MonoBehaviour
 					case Comportement.Loop:
 					case Comportement.GoAndTeleport:
 					case Comportement.Teleport:
-						return 0;
-
+						nextPoint = 0;
+						break;
 					case Comportement.GoAndReturn:
 						inverseDirection = !inverseDirection;
-						return nextPoint - 1;
+						nextPoint--;
+						break;
 				}
 			else
-				return nextPoint + 1;
+				nextPoint++;
 		}
 
+		moveTime = Vector2.Distance(points[nextPoint], points[lastPoint]) / speed;
+		moveTimer = 0;
+		stopTimer = stopTime;
 	}
 
 
