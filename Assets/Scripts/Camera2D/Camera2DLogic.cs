@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 //Script à mettre sur les objets pour un suivi de la camera
 public class Camera2DLogic : MonoBehaviour
@@ -8,9 +7,9 @@ public class Camera2DLogic : MonoBehaviour
 
     [SerializeField]
     protected int iD;
-
-    public EnumCameraPlan plan = EnumCameraPlan.XY;
-    public Vector2 decalage = Vector2.zero;
+	[SerializeField]
+	protected EnumCameraPlan plan = EnumCameraPlan.XY;
+	public Vector2 decalage = Vector2.zero;
 
     protected Transform _transform;
 
@@ -28,8 +27,12 @@ public class Camera2DLogic : MonoBehaviour
         iD = ++IDs;
     }
 
-    virtual public void UpdatePoint(ref Point2D point2D) {
-        switch (plan)
+    virtual public void UpdatePoint(ref Point2D point2D)
+	{
+#if UNITY_EDITOR
+		_transform = transform;
+#endif
+		switch(plan)
         {
             case EnumCameraPlan.XY:
                 point2D.position = _transform.position;
@@ -41,5 +44,8 @@ public class Camera2DLogic : MonoBehaviour
                 point2D.position.y = _transform.position.y;
                 break;
         }
-    }
+
+		point2D.decalage = decalage;
+
+	}
 }

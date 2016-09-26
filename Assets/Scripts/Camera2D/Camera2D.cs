@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 //Script unique pour la camera
 public class Camera2D : MonoBehaviour
@@ -50,6 +48,7 @@ public class Camera2D : MonoBehaviour
 
 #if UNITY_EDITOR
 		isPlay = true;
+		player = null;
 #endif
 	}
 
@@ -75,20 +74,36 @@ public class Camera2D : MonoBehaviour
 			point = pointB;
 		}
 
+		/*foreach(Camera2DLogic i in targets)
+		{
+			i.UpdatePoint(ref point);
+		}*/
+
 		Vector3 nPosition = point.CameraPosition;
 		nPosition.z = transform.position.z;
 		transform.position = nPosition;
 	}
 
 #if UNITY_EDITOR
-	bool isPlay = false;
+	public bool isPlay = false;
+	Transform player;
 	void OnDrawGizmos()
 	{
 		if(!isPlay)
 		{
-			Vector3 playerPos = GameObject.FindGameObjectWithTag("Player").transform.position;
-			playerPos.z = transform.position.z;
-			transform.position = playerPos;
+			if(player == null)
+			{
+				pointB = new Point2D();
+				pointA = new Point2D();
+				
+				//point = new Point2D();
+				player = GameObject.FindGameObjectWithTag("Player").transform;
+				SetTarget(player);
+			}
+			else
+			{
+				LateUpdate();
+			}
 		}
 	}
 #endif

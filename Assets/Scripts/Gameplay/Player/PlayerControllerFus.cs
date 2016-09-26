@@ -8,7 +8,7 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private Transform _transform;
 	//private BoxCollider2D _collider;
-    [HideInInspector]
+	[HideInInspector]
 	public ActorPhysics _physics;
 
 	[SerializeField]
@@ -42,7 +42,6 @@ public class PlayerControllerFus : MonoBehaviour
 		_physics.IsSliding = false;
 		_physics.IsGrounded = false;
 		Facing = 1;
-
 	}
 
 	#endregion
@@ -61,13 +60,13 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void OnGrounded()
 	{
-        StartCoroutine(GroundedUpdate());
+		StartCoroutine(GroundedUpdate());
 		_anims.Play("Idle");
 	}
 
 	private void OnAirborne()
 	{
-        slidingAngle = 0f;
+		slidingAngle = 0f;
 		StartCoroutine(AirborneUpdate());
 		_anims.Play("Airborne");
 	}
@@ -83,9 +82,9 @@ public class PlayerControllerFus : MonoBehaviour
 
 
 	#region STATES/UPDATES
-	
+
 	private bool airborneUpdateActive = false; // avoid frame-perfect double AirborneUpdate
-    private IEnumerator AirborneUpdate()
+	private IEnumerator AirborneUpdate()
 	{
 		if(airborneUpdateActive)
 			yield break;
@@ -96,7 +95,7 @@ public class PlayerControllerFus : MonoBehaviour
 
 		while(!_physics.IsGrounded && !_physics.IsSliding)
 		{
-            jumpTimer += Time.deltaTime;
+			jumpTimer += Time.deltaTime;
 
 			if(jumpTimer > jumpTime)
 			{
@@ -104,8 +103,8 @@ public class PlayerControllerFus : MonoBehaviour
 
 				if(_physics.HeadingY <= 0) // descending
 				{
-                    DownCheck();
-                }
+					DownCheck();
+				}
 				else // ascending 
 				{
 					_physics.UpCast();
@@ -115,8 +114,8 @@ public class PlayerControllerFus : MonoBehaviour
 						tempVector.y = -tempVector.y;
 						_physics.MovementVector = tempVector;
 					}
-                    _physics.ForwardCast();
-                }
+					_physics.ForwardCast();
+				}
 			}
 			else
 			{
@@ -129,17 +128,17 @@ public class PlayerControllerFus : MonoBehaviour
 				Vector2 transitionPosition = Vector2.Lerp(positionBeforeJump, positionTargetJump, pourcent);
 				transitionPosition.y += JumpHeight * jumpCurve.Evaluate(pourcent);
 
-                //Appli mouvement
+				//Appli mouvement
 				_physics.MovementVector = Time.deltaTime > 0f ? (transitionPosition - transitionPositionBefore) * MovePower / Time.deltaTime : Vector2.zero;
 				//_physics.movementVectorScaled = (transitionPosition - transitionPositionBefore);
 
 				if(_physics.HeadingY < 0) //descending
 				{
 					DownCheck();
-                }
+				}
 				else //ascending
 				{
-                    _physics.UpCast();
+					_physics.UpCast();
 					if(_physics.castResult.touched)
 					{
 						Vector2 tempVector = _physics.MovementVector;
@@ -152,11 +151,11 @@ public class PlayerControllerFus : MonoBehaviour
 							jumpTimer = 2;
 						}
 					}
-                    _physics.ForwardCast();
+					_physics.ForwardCast();
 				}
 			}
 
-            yield return null;
+			yield return null;
 		}
 
 		airborneUpdateActive = false;
@@ -165,25 +164,25 @@ public class PlayerControllerFus : MonoBehaviour
 	private void DownCheck()
 	{
 		_physics.DownCast();
-        
-        if (_physics.castResult.touched)
+
+		if(_physics.castResult.touched)
 		{
-            if (_physics.castResult.normalAngle <= walkableAngle)
+			if(_physics.castResult.normalAngle <= walkableAngle)
 			{
-                _physics.MovementVector = Vector2.zero;
+				_physics.MovementVector = Vector2.zero;
 				_physics.IsGrounded = true;
-            }
+			}
 			else if(_physics.castResult.normalAngle < 90 && _physics.castResult.normalAngle != slidingAngle)
 			{
-                slidingAngle = _physics.castResult.normalAngle;
-                _physics.MovementVector = new Vector2(_physics.castResult.normal.y * _physics.castResult.heading, Mathf.Abs(_physics.castResult.normal.x)*-1) * slidingSpeed;
-                _physics.ApplyGravity();
-                _physics.IsSliding = true;
+				slidingAngle = _physics.castResult.normalAngle;
+				_physics.MovementVector = new Vector2(_physics.castResult.normal.y * _physics.castResult.heading, Mathf.Abs(_physics.castResult.normal.x) * -1) * slidingSpeed;
+				_physics.ApplyGravity();
+				_physics.IsSliding = true;
 			}
 		}
-        else
-            _physics.ForwardCast();
-    }
+		else
+			_physics.ForwardCast();
+	}
 
 
 	private float slidingAngle; // use this to know if we should recalculate the MovementVector
@@ -192,40 +191,40 @@ public class PlayerControllerFus : MonoBehaviour
 	{
 		while(_physics.IsSliding)
 		{
-            _physics.ForwardCast();
+			_physics.ForwardCast();
 
-            DownCheck();
-            if (!_physics.castResult.touched)
-            {
-                _physics.IsSliding = false;
-                slidingAngle = 0f;
-            }    
+			DownCheck();
+			if(!_physics.castResult.touched)
+			{
+				_physics.IsSliding = false;
+				slidingAngle = 0f;
+			}
 
-            yield return null;
+			yield return null;
 		}
 	}
 
-    IEnumerator GroundedUpdate()
-    {
-        _physics.ApplyGravity();
-        while (_physics.IsGrounded)
-        {
-            //_physics.ForwardCast();
+	IEnumerator GroundedUpdate()
+	{
+		_physics.ApplyGravity();
+		while(_physics.IsGrounded)
+		{
+			//_physics.ForwardCast();
 
-            _physics.DownCast();
-            if (!_physics.castResult.touched)
-                _physics.IsGrounded = false;
+			_physics.DownCast();
+			if(!_physics.castResult.touched)
+				_physics.IsGrounded = false;
 
-            yield return null;
-        }
-    }
+			yield return null;
+		}
+	}
 
-    #endregion
+	#endregion
 
 
-    #region POINTING
+	#region POINTING
 
-    [Header("Movement Properties"),SerializeField, Range(1, 89)]
+	[Header("Movement Properties"),SerializeField, Range(1, 89)]
 	private float walkableAngle;
 	[SerializeField]
 	private float slidingSpeed;
@@ -375,28 +374,28 @@ public class PlayerControllerFus : MonoBehaviour
 		//MovementVector = (target - (Vector2)_transform.position).normalized;
 	}
 
-    #endregion
+	#endregion
 
 
-    #region TRIGGER REACTIONS
+	#region TRIGGER REACTIONS
 
-    void OnTriggerEnter2D(Collider2D co)
-    {
-        //Debug.Log(co.name);
-        co.GetComponent<ITrigger>().OnPlayerEnter(this);
-    }
-    void OnTriggerExit2D(Collider2D co)
-    {
-        //Debug.Log(co.name);
-        co.GetComponent<ITrigger>().OnPlayerExit(this);
-    }
+	void OnTriggerEnter2D(Collider2D co)
+	{
+		//Debug.Log(co.name);
+		co.GetComponent<ITrigger>().OnPlayerEnter(this);
+	}
+	void OnTriggerExit2D(Collider2D co)
+	{
+		//Debug.Log(co.name);
+		co.GetComponent<ITrigger>().OnPlayerExit(this);
+	}
 
-    #endregion
+	#endregion
 
 
-    #region PUNCHING! + FACING
+	#region PUNCHING! + FACING
 
-    [Header("Punch Properties"), SerializeField]
+	[Header("Punch Properties"), SerializeField]
 	private LayerMask punchLayer;
 	[SerializeField]
 	private float punchRadius;

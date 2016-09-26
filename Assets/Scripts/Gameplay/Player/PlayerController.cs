@@ -6,7 +6,7 @@ public class PlayerController : MonoBehaviour {
     #region SETUP
 
     private Transform _transform;
-    private BoxCollider2D _collider;
+    //private BoxCollider2D _collider;
     private ActorPhysics _physics;
 
     [SerializeField]
@@ -20,7 +20,7 @@ public class PlayerController : MonoBehaviour {
     void Awake()
     {
         _transform = GetComponent<Transform>();
-        _collider = GetComponent<BoxCollider2D>();
+        //_collider = GetComponent<BoxCollider2D>();
         _physics = GetComponent<ActorPhysics>();
     }
 

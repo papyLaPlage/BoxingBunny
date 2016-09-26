@@ -8,7 +8,7 @@ public class PlayerInputs : MonoBehaviour
 
 	#region SETUP
 
-	private Transform _transform;
+	//private Transform _transform;
 	//private PlayerInputs _inputs;
 
 	public PlayerControllerFus/*PlayerController*/ Player
@@ -34,7 +34,7 @@ public class PlayerInputs : MonoBehaviour
 
 	void Awake()
 	{
-		_transform = GetComponent<Transform>();
+		//_transform = GetComponent<Transform>();
 	}
 
 	// Use this for initialization

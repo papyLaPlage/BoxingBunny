@@ -40,10 +40,10 @@ public class ActorPhysics : MonoBehaviour
 	}
 
 	// Use this for initialization
-	/*void Start()
-    {
-        
-    }*/
+	void Start()
+	{
+
+	}
 
 	#endregion
 
@@ -304,9 +304,9 @@ public class ActorPhysics : MonoBehaviour
 	{
 		mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
 		backCastOrigin = mainCastOrigin - sizeX * HeadingX;
-        Debug.DrawLine(mainCastOrigin, mainCastOrigin + Vector2.down* (boxOffset - movementVectorScaled.y), Color.blue);
-        Debug.DrawLine(backCastOrigin, backCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
-        castResult.touched = true;
+		Debug.DrawLine(mainCastOrigin, mainCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
+		Debug.DrawLine(backCastOrigin, backCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
+		castResult.touched = true;
 		if(Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
 		{
 			if(Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _secondHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
@@ -327,16 +327,16 @@ public class ActorPhysics : MonoBehaviour
 			{
 				_transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
 				castResult.normal = MainHit.normal;
-				
+
 				/*
                     Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
                     MovementVector = Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
                     Debug.DrawRay(MainHit.point, Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1), Color.red); // this is the movement vector transformed to a sliding vector
                 */
 			}
-            castResult.normalAngle = Vector2.Angle(Vector2.up, castResult.normal);
-            castResult.heading = castResult.normal.x > 0 ? 1 : -1;
-            return;
+			castResult.normalAngle = Vector2.Angle(Vector2.up, castResult.normal);
+			castResult.heading = castResult.normal.x > 0 ? 1 : -1;
+			return;
 		}
 		else if(Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
 		{

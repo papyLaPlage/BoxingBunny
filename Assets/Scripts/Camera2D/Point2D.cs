@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 //Positions 2D 
 public class Point2D
