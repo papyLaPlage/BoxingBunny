@@ -3,7 +3,6 @@ using System.Collections;
 
 public class Enemy : MonoBehaviour
 {
-
 	#region SETUP
 
 	//private Transform _transform;
@@ -15,7 +14,12 @@ public class Enemy : MonoBehaviour
 	[SerializeField]
 	private Animator _anims;
 
-	[Header("Movement Properties"),SerializeField, Range(1, 89)]
+	[SerializeField,Range(1, 30)]
+	private byte pv = 1;
+	[SerializeField,Range(0, 30)]
+	private byte damage = 1;
+
+	[Header("Movement Properties"), SerializeField, Range(1, 89)]
 	private float walkableAngle;
 	[SerializeField]
 	private float slidingSpeed;
@@ -34,6 +38,7 @@ public class Enemy : MonoBehaviour
 
 		_physics.IsSliding = false;
 		_physics.IsGrounded = false;
+		Facing = 1;
 	}
 
 	#endregion
@@ -155,6 +160,38 @@ public class Enemy : MonoBehaviour
 			_physics.IsGrounded = _physics.castResult.touched;
 			yield return null;
 		}
+	}
+
+	private int Facing
+	{
+		get
+		{
+			return _facing;
+		}
+		set
+		{
+			if(value != _facing)
+			{
+				_facing = value;
+				_skin.localScale = new Vector2(value, 1);
+			}
+		}
+	}
+	private int _facing;
+
+	#endregion
+
+	#region TRIGGER REACTIONS
+
+	void OnTriggerEnter2D(Collider2D co)
+	{
+		//Debug.Log(co.name);
+		//co.GetComponent<ITrigger>().OnPlayerEnter(this);
+	}
+	void OnTriggerExit2D(Collider2D co)
+	{
+		//Debug.Log(co.name);
+		//co.GetComponent<ITrigger>().OnPlayerExit(this);
 	}
 
 	#endregion

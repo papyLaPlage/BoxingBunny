@@ -29,6 +29,8 @@ public class ActorPhysics : MonoBehaviour
 		_transform = GetComponent<Transform>();
 		_collider = GetComponent<BoxCollider2D>();
 
+		Debug.Log(_collider.size);
+
 		sizeX = Vector2.right * _collider.size.x;
 		sizeY = Vector2.up * _collider.size.y;
 		extentX = sizeX * 0.5f;
@@ -306,6 +308,7 @@ public class ActorPhysics : MonoBehaviour
 		backCastOrigin = mainCastOrigin - sizeX * HeadingX;
 		Debug.DrawLine(mainCastOrigin, mainCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
 		Debug.DrawLine(backCastOrigin, backCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
+
 		castResult.touched = true;
 		if(Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
 		{

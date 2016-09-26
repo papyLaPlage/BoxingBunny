@@ -103,6 +103,7 @@ public class Camera2D : MonoBehaviour
 			else
 			{
 				LateUpdate();
+				//transform.position = new Vector3(player.position.x, player.position.y, transform.position.z);
 			}
 		}
 	}
