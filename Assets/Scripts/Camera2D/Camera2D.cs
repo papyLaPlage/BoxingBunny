@@ -54,7 +54,6 @@ public class Camera2D : MonoBehaviour
 
 	private void LateUpdate()
 	{
-
 		if(IFollowA)
 		{
 			foreach(Camera2DLogic i in targets)
@@ -95,7 +94,7 @@ public class Camera2D : MonoBehaviour
 			{
 				pointB = new Point2D();
 				pointA = new Point2D();
-				
+
 				//point = new Point2D();
 				player = GameObject.FindGameObjectWithTag("Player").transform;
 				SetTarget(player);

@@ -1,36 +1,48 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(ActorPhysics))]
 public class Enemy : MonoBehaviour
 {
 	#region SETUP
 
-	//private Transform _transform;
+	protected Transform _transform;
 	[HideInInspector]
 	public ActorPhysics _physics;
 
 	[SerializeField]
-	private Transform _skin;
+	protected Transform _skin;
 	[SerializeField]
-	private Animator _anims;
+	protected Animator _anims;
 
 	[SerializeField,Range(1, 30)]
-	private byte pv = 1;
+	protected byte pv = 1;
 	[SerializeField,Range(0, 30)]
-	private byte damage = 1;
+	protected byte damage = 1;
+
+	protected bool alive = true;
 
 	[Header("Movement Properties"), SerializeField, Range(1, 89)]
-	private float walkableAngle;
+	protected float walkableAngle;
 	[SerializeField]
-	private float slidingSpeed;
+	protected float slidingSpeed;
 
-	void Awake()
+	public Vector2 Position2D
 	{
-		//_transform = GetComponent<Transform>();
+		get
+		{
+			return _transform.position;
+		}
+	}
+	protected Vector2 tempVector;
+
+	protected virtual void Awake()
+	{
+		_transform = GetComponent<Transform>();
 		_physics = GetComponent<ActorPhysics>();
 	}
 
-	void Start()
+	protected virtual void Start()
 	{
 		_physics.OnGrounded += OnGrounded;
 		_physics.OnAirborne += OnAirborne;
@@ -38,41 +50,38 @@ public class Enemy : MonoBehaviour
 
 		_physics.IsSliding = false;
 		_physics.IsGrounded = false;
-		Facing = 1;
 	}
 
 	#endregion
 
-	// Update is called once per frame
-	void Update()
-	{
-		_physics.ApplyGravity();
-	}
+	#region PHYSICS CALLBACKS
 
-	private void OnGrounded()
+	protected virtual void OnGrounded()
 	{
+		//Debug.Log("base:OnGrounded");
 		StartCoroutine(GroundedUpdate());
-		//_anims.Play("Idle");
 	}
 
-	private void OnAirborne()
+	protected virtual void OnAirborne()
 	{
+		//Debug.Log("base:OnAirborne");
 		slidingAngle = 0f;
 		StartCoroutine(AirborneUpdate());
-		//_anims.Play("Airborne");
 	}
 
-	private void OnSliding()
+	protected virtual void OnSliding()
 	{
+		//Debug.Log("base:OnSliding");
 		StartCoroutine(SlidingUpdate());
-		//Facing = (int)_physics.HeadingX;
-		//_anims.Play("Sliding");
+		Facing = (int)_physics.HeadingX;
 	}
+
+	#endregion
 
 	#region STATES/UPDATES
 
-	private bool airborneUpdateActive = false; // avoid frame-perfect double AirborneUpdate
-	private IEnumerator AirborneUpdate()
+	protected bool airborneUpdateActive = false; // avoid frame-perfect double AirborneUpdate
+	protected virtual IEnumerator AirborneUpdate()
 	{
 		if(airborneUpdateActive)
 			yield break;
@@ -92,7 +101,7 @@ public class Enemy : MonoBehaviour
 				_physics.UpCast();
 				if(_physics.castResult.touched)
 				{
-					Vector2 tempVector = _physics.MovementVector;
+					tempVector = _physics.MovementVector;
 					tempVector.y = -tempVector.y;
 					_physics.MovementVector = tempVector;
 				}
@@ -107,7 +116,7 @@ public class Enemy : MonoBehaviour
 		airborneUpdateActive = false;
 	}
 
-	private void DownCast()
+	protected void DownCast()
 	{
 		_physics.DownCast();
 
@@ -128,12 +137,13 @@ public class Enemy : MonoBehaviour
 		}
 		else
 			_physics.ForwardCast();
+
 	}
 
 
-	private float slidingAngle; // use this to know if we should recalculate the MovementVector
+	protected float slidingAngle; // use this to know if we should recalculate the MovementVector
 
-	IEnumerator SlidingUpdate()
+	protected virtual IEnumerator SlidingUpdate()
 	{
 		while(_physics.IsSliding)
 		{
@@ -151,7 +161,7 @@ public class Enemy : MonoBehaviour
 	}
 
 
-	IEnumerator GroundedUpdate()
+	protected virtual IEnumerator GroundedUpdate()
 	{
 		_physics.ApplyGravity();
 		while(_physics.IsGrounded)
@@ -162,7 +172,7 @@ public class Enemy : MonoBehaviour
 		}
 	}
 
-	private int Facing
+	protected int Facing
 	{
 		get
 		{
@@ -172,12 +182,13 @@ public class Enemy : MonoBehaviour
 		{
 			if(value != _facing)
 			{
-				_facing = value;
+				_facing = (int)Mathf.Sign(value);
 				_skin.localScale = new Vector2(value, 1);
 			}
 		}
 	}
-	private int _facing;
+	[SerializeField, Range(-1,1)]
+	protected int _facing = 1;
 
 	#endregion
 
@@ -185,13 +196,10 @@ public class Enemy : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D co)
 	{
-		//Debug.Log(co.name);
-		//co.GetComponent<ITrigger>().OnPlayerEnter(this);
-	}
-	void OnTriggerExit2D(Collider2D co)
-	{
-		//Debug.Log(co.name);
-		//co.GetComponent<ITrigger>().OnPlayerExit(this);
+		if(co.tag == "Player")
+		{
+
+		}
 	}
 
 	#endregion

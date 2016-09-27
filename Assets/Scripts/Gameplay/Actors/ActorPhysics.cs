@@ -29,8 +29,6 @@ public class ActorPhysics : MonoBehaviour
 		_transform = GetComponent<Transform>();
 		_collider = GetComponent<BoxCollider2D>();
 
-		Debug.Log(_collider.size);
-
 		sizeX = Vector2.right * _collider.size.x;
 		sizeY = Vector2.up * _collider.size.y;
 		extentX = sizeX * 0.5f;
@@ -38,7 +36,7 @@ public class ActorPhysics : MonoBehaviour
 
 		HeadingX = HeadingY = 1;
 		_isGrounded = true;
-		_isGrounded = true;
+		//_isGrounded = true;
 	}
 
 	// Use this for initialization
@@ -235,6 +233,15 @@ public class ActorPhysics : MonoBehaviour
 	}
 	public CastResult castResult = new CastResult();
 
+	public struct TouchResult
+	{
+		public bool Up;
+		public bool Down;
+		public bool Forward;
+		public bool Backward;
+	}
+	public TouchResult touchResult = new TouchResult();
+
 	public void DebugDraw()
 	{
 		Debug.DrawLine(Position2D, mainCastOrigin, Color.black);
@@ -250,7 +257,7 @@ public class ActorPhysics : MonoBehaviour
 	{
 		mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
 		frontCastOrigin = mainCastOrigin - sizeY * HeadingY;
-		castResult.touched = true;
+		touchResult.Forward = castResult.touched = true;
 		if(Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.right * HeadingX, _mainHits, Mathf.Abs(movementVectorScaled.x) + boxOffset, solidCastLayer) > 0)
 		{
 			if(Physics2D.RaycastNonAlloc(frontCastOrigin, Vector2.right * HeadingX, _secondHits, Mathf.Abs(movementVectorScaled.x) + boxOffset, solidCastLayer) > 0)
@@ -284,14 +291,14 @@ public class ActorPhysics : MonoBehaviour
 		}
 
 		_transform.Translate(Vector2.right * movementVectorScaled.x);
-		castResult.touched = false;
+		touchResult.Forward = castResult.touched = false;
 	}
 
 	public void BackCast() // this one is more of an urgency cast, it should not be used every frame if possible
 	{
 		mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
 		backCastOrigin = mainCastOrigin - sizeX * HeadingX;
-		castResult.touched = true;
+		touchResult.Backward = castResult.touched = true;
 		if(Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.left * HeadingX, _secondHits, boxOffset, solidCastLayer) > 0)
 		{
 			_transform.Translate(Vector2.right * ((SecondHit.point.x + (boxOffset + extentX.x) * HeadingX) - Position2D.x));
@@ -299,7 +306,7 @@ public class ActorPhysics : MonoBehaviour
 		}
 
 		//_transform.Translate(Vector2.right * movementVectorScaled.x);
-		castResult.touched = false;
+		touchResult.Backward = castResult.touched = false;
 	}
 
 	public void DownCast()
@@ -309,7 +316,7 @@ public class ActorPhysics : MonoBehaviour
 		Debug.DrawLine(mainCastOrigin, mainCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
 		Debug.DrawLine(backCastOrigin, backCastOrigin + Vector2.down * (boxOffset - movementVectorScaled.y), Color.blue);
 
-		castResult.touched = true;
+		touchResult.Down = castResult.touched = true;
 		if(Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.down, _mainHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
 		{
 			if(Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.down, _secondHits, boxOffset - movementVectorScaled.y, groundCastLayer) > 0)
@@ -324,19 +331,13 @@ public class ActorPhysics : MonoBehaviour
 					_transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
 					castResult.normal = MainHit.normal;
 				}
-
 			}
 			else // no hesitation
 			{
 				_transform.Translate(Vector2.up * ((MainHit.point.y + (boxOffset + extentY.y)) - Position2D.y));
 				castResult.normal = MainHit.normal;
-
-				/*
-                    Vector3 tempVector = Vector3.Cross(MainHit.normal, _movementVector);
-                    MovementVector = Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1); // this is the movement vector transformed to a sliding vector
-                    Debug.DrawRay(MainHit.point, Vector3.Cross(tempVector, MainHit.normal) * (MainHit.normal.x >= 0 ? 1 : -1), Color.red); // this is the movement vector transformed to a sliding vector
-                */
 			}
+
 			castResult.normalAngle = Vector2.Angle(Vector2.up, castResult.normal);
 			castResult.heading = castResult.normal.x > 0 ? 1 : -1;
 			return;
@@ -351,14 +352,14 @@ public class ActorPhysics : MonoBehaviour
 		}
 
 		_transform.Translate(Vector2.up * movementVectorScaled.y);
-		castResult.touched = false;
+		touchResult.Down = castResult.touched = false;
 	}
 
 	public void UpCast()
 	{
 		mainCastOrigin = Position2D + extentX * HeadingX + extentY * HeadingY;
 		backCastOrigin = mainCastOrigin - sizeX * HeadingX;
-		castResult.touched = true;
+		touchResult.Up = castResult.touched = true;
 		if(Physics2D.RaycastNonAlloc(mainCastOrigin, Vector2.up, _mainHits, boxOffset - movementVectorScaled.y, solidCastLayer) > 0)
 		{
 			if(Physics2D.RaycastNonAlloc(backCastOrigin, Vector2.up, _secondHits, boxOffset - movementVectorScaled.y, solidCastLayer) > 0)
@@ -381,7 +382,7 @@ public class ActorPhysics : MonoBehaviour
 		}
 
 		_transform.Translate(Vector2.up * movementVectorScaled.y);
-		castResult.touched = false;
+		touchResult.Up = castResult.touched = false;
 	}
 
 	#endregion

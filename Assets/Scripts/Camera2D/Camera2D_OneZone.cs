@@ -54,7 +54,7 @@ public class Camera2D_OneZone : Camera2DLogic
 		{
 			point2D.position.x = Calcul(_transform.position.x, point2D.position.x, widthD2);
 		}
-		if (plan == EnumCameraPlan.Y || plan == EnumCameraPlan.XY)
+		if(plan == EnumCameraPlan.Y || plan == EnumCameraPlan.XY)
 		{
 			point2D.position.y = Calcul(_transform.position.y, point2D.position.y, heightD2);
 		}
@@ -64,7 +64,7 @@ public class Camera2D_OneZone : Camera2DLogic
 	{
 		float distance = transPosition - point;
 
-		if (Mathf.Abs(distance) > distanceMax)
+		if(Mathf.Abs(distance) > distanceMax)
 		{
 			float correct = distance - distanceMax * Mathf.Sign(distance);
 
@@ -79,7 +79,7 @@ public class Camera2D_OneZone : Camera2DLogic
 
 	void OnDrawGizmos()
 	{
-		if (_point2D == null)
+		if(_point2D == null)
 		{
 			_point2D = new Point2D(Camera.main.transform.position);
 		}
@@ -92,7 +92,7 @@ public class Camera2D_OneZone : Camera2DLogic
 		Gizmos.color = Color.blue;
 		Gizmos.DrawWireSphere(new Vector3(_point2D.position.x, _point2D.position.y), 0.1f);
 
-		if (plan == EnumCameraPlan.X || plan == EnumCameraPlan.XY)
+		if(plan == EnumCameraPlan.X || plan == EnumCameraPlan.XY)
 		{
 			Debug.DrawLine(
 				new Vector2(_point2D.position.x + widthD2, _point2D.position.y + heightD2),
@@ -106,7 +106,7 @@ public class Camera2D_OneZone : Camera2DLogic
 			);
 
 		}
-		if (plan == EnumCameraPlan.Y || plan == EnumCameraPlan.XY)
+		if(plan == EnumCameraPlan.Y || plan == EnumCameraPlan.XY)
 		{
 			Debug.DrawLine(
 				new Vector2(_point2D.position.x + widthD2, _point2D.position.y + heightD2),

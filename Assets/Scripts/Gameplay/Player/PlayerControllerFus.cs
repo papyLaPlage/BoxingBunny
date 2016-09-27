@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(ActorPhysics))]
 public class PlayerControllerFus : MonoBehaviour
 {
-
 	#region SETUP
 
 	private Transform _transform;
-	//private BoxCollider2D _collider;
 	[HideInInspector]
 	public ActorPhysics _physics;
 
@@ -24,7 +23,6 @@ public class PlayerControllerFus : MonoBehaviour
 		}
 	}
 
-	// Use this before initialization
 	void Awake()
 	{
 		_transform = GetComponent<Transform>();
@@ -32,7 +30,6 @@ public class PlayerControllerFus : MonoBehaviour
 		_physics = GetComponent<ActorPhysics>();
 	}
 
-	// Use this for initialization
 	void Start()
 	{
 		_physics.OnGrounded += OnGrounded;
@@ -60,12 +57,14 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void OnGrounded()
 	{
+		//Debug.Log("OnGrounded");
 		StartCoroutine(GroundedUpdate());
 		_anims.Play("Idle");
 	}
 
 	private void OnAirborne()
 	{
+		//Debug.Log("OnAirborne");
 		slidingAngle = 0f;
 		StartCoroutine(AirborneUpdate());
 		_anims.Play("Airborne");
@@ -209,12 +208,8 @@ public class PlayerControllerFus : MonoBehaviour
 		_physics.ApplyGravity();
 		while(_physics.IsGrounded)
 		{
-			//_physics.ForwardCast();
-
 			_physics.DownCast();
-			if(!_physics.castResult.touched)
-				_physics.IsGrounded = false;
-
+			_physics.IsGrounded = _physics.castResult.touched;
 			yield return null;
 		}
 	}
