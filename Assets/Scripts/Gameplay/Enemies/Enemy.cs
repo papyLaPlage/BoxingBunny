@@ -16,11 +16,16 @@ public class Enemy : MonoBehaviour
 	protected Animator _anims;
 
 	[SerializeField,Range(1, 30)]
-	protected byte pv = 1;
+	protected int pvMax = 1;
+	protected int pv = 1;
 	[SerializeField,Range(0, 30)]
-	protected byte damage = 1;
+	protected int damage = 1;
 
-	protected bool alive = true;
+	[SerializeField,Range(0, 2)]
+	protected float noDamageTime = 0.5f;
+	protected float noDamageTimer = 0;
+
+	public bool alive = true;
 
 	[Header("Movement Properties"), SerializeField, Range(1, 89)]
 	protected float walkableAngle;
@@ -40,6 +45,8 @@ public class Enemy : MonoBehaviour
 	{
 		_transform = GetComponent<Transform>();
 		_physics = GetComponent<ActorPhysics>();
+
+		pv = pvMax;
 	}
 
 	protected virtual void Start()
@@ -50,6 +57,35 @@ public class Enemy : MonoBehaviour
 
 		_physics.IsSliding = false;
 		_physics.IsGrounded = false;
+	}
+
+	protected virtual void Update()
+	{
+		if(noDamageTimer > 0)
+		{
+			noDamageTimer -= Time.deltaTime;
+		}
+	}
+
+	public void UpdateLife(int _pv)
+	{
+		if(noDamageTimer <= 0)
+		{
+			noDamageTimer = noDamageTime;
+
+			pv += _pv;
+			pv = Mathf.Clamp(pv, 0, pvMax);
+
+			if(alive && pv == 0)
+			{
+				Death();
+			}
+		}
+	}
+
+	protected virtual void Death()
+	{
+		alive = false;
 	}
 
 	#endregion
@@ -198,7 +234,7 @@ public class Enemy : MonoBehaviour
 	{
 		if(co.tag == "Player")
 		{
-
+			co.GetComponent<PlayerControllerFus>().UpdateLife(damage);
 		}
 	}
 

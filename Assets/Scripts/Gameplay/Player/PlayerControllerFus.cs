@@ -15,6 +15,20 @@ public class PlayerControllerFus : MonoBehaviour
 	[SerializeField]
 	private Animator _anims;
 
+	public int life = 3;
+	[SerializeField]
+	private int pvMax = 3;
+	public int pv = 3;
+
+	[SerializeField,Range(0, 2)]
+	private float noDamageTime = 0.5f;
+	private float noDamageTimer = 0;
+
+	[Range(1, 10)]
+	public int punchDamage = 1;
+	[Range(1, 10)]
+	public int footDamage = 1;
+
 	public Vector2 Position2D
 	{
 		get
@@ -39,6 +53,42 @@ public class PlayerControllerFus : MonoBehaviour
 		_physics.IsSliding = false;
 		_physics.IsGrounded = false;
 		Facing = 1;
+	}
+
+	public void UpdateLife(int _pv)
+	{
+		pv += _pv;
+		pv = Mathf.Clamp(pv, 0, pvMax);
+
+		if(pv == 0)
+		{
+			life--;
+			if(life == 0)
+			{
+				GameOver();
+			}
+			else
+			{
+				restart();
+			}
+		}
+	}
+
+	void restart()
+	{
+
+	}
+
+	void GameOver()
+	{
+
+	}
+
+	public void AfterFootTouch()
+	{
+		Vector2 tempVector = _physics.MovementVector;
+		tempVector.y = Mathf.Abs(tempVector.y);
+		_physics.MovementVector = tempVector;
 	}
 
 	#endregion
@@ -377,12 +427,12 @@ public class PlayerControllerFus : MonoBehaviour
 	void OnTriggerEnter2D(Collider2D co)
 	{
 		//Debug.Log(co.name);
-		co.GetComponent<ITrigger>().OnPlayerEnter(this);
+		//co.GetComponent<ITrigger>().OnPlayerEnter(this);
 	}
 	void OnTriggerExit2D(Collider2D co)
 	{
 		//Debug.Log(co.name);
-		co.GetComponent<ITrigger>().OnPlayerExit(this);
+		//co.GetComponent<ITrigger>().OnPlayerExit(this);
 	}
 
 	#endregion

@@ -29,7 +29,6 @@ public class Goomba : Enemy
 
 	protected override void OnAirborne()
 	{
-
 		base.OnAirborne();
 		//Debug.Log("OnAirborne");
 		if(alive)
@@ -47,12 +46,13 @@ public class Goomba : Enemy
 	#endregion
 
 	#region STATES/UPDATES
+
 	[SerializeField]
 	protected float speed = 1;
 
 	protected virtual IEnumerator Move()
 	{
-		while(_physics.IsGrounded)
+		while(_physics.IsGrounded && alive)
 		{
 			_physics.ForwardCast();
 			if(_physics.castResult.touched)
@@ -66,6 +66,13 @@ public class Goomba : Enemy
 
 			yield return null;
 		}
+	}
+
+	protected override void Death()
+	{
+		base.Death();
+		_physics.IsGrounded = false;
+		_anims.Play("Dead");
 	}
 
 	#endregion
