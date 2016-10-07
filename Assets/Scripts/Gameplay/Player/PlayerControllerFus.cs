@@ -6,6 +6,11 @@ public class PlayerControllerFus : MonoBehaviour
 {
 	#region SETUP
 
+	[SerializeField]
+	private Collider2D punchCollider;
+	[SerializeField]
+	private Collider2D footCollider;
+
 	private Transform _transform;
 	[HideInInspector]
 	public ActorPhysics _physics;
@@ -108,6 +113,7 @@ public class PlayerControllerFus : MonoBehaviour
 	private void OnGrounded()
 	{
 		//Debug.Log("OnGrounded");
+		footCollider.enabled = false;
 		StartCoroutine(GroundedUpdate());
 		_anims.Play("Idle");
 	}
@@ -122,6 +128,8 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void OnSliding()
 	{
+		//Debug.Log("OnSliding");
+		footCollider.enabled = false;
 		StartCoroutine(SlidingUpdate());
 		Facing = (int)_physics.HeadingX;
 		_anims.Play("Sliding");
@@ -212,6 +220,8 @@ public class PlayerControllerFus : MonoBehaviour
 
 	private void DownCheck()
 	{
+		footCollider.enabled = true;
+
 		_physics.DownCast();
 
 		if(_physics.castResult.touched)
@@ -424,15 +434,25 @@ public class PlayerControllerFus : MonoBehaviour
 
 	#region TRIGGER REACTIONS
 
+	ITrigger iTrigger;
 	void OnTriggerEnter2D(Collider2D co)
 	{
 		//Debug.Log(co.name);
-		//co.GetComponent<ITrigger>().OnPlayerEnter(this);
+		iTrigger = co.GetComponent<ITrigger>();
+		if(iTrigger != null)
+		{
+			iTrigger.OnPlayerEnter(this);
+		}
 	}
+
 	void OnTriggerExit2D(Collider2D co)
 	{
 		//Debug.Log(co.name);
-		//co.GetComponent<ITrigger>().OnPlayerExit(this);
+		iTrigger = co.GetComponent<ITrigger>();
+		if(iTrigger != null)
+		{
+			iTrigger.OnPlayerExit(this);
+		}
 	}
 
 	#endregion
@@ -440,18 +460,18 @@ public class PlayerControllerFus : MonoBehaviour
 
 	#region PUNCHING! + FACING
 
-	[Header("Punch Properties"), SerializeField]
-	private LayerMask punchLayer;
+	//[Header("Punch Properties"), SerializeField]
+	//private LayerMask punchLayer;
+	//[SerializeField]
+	//private float punchRadius;
+	//[SerializeField]
+	//private float punchDistance;
 	[SerializeField]
-	private float punchRadius;
+	private float punchStartup = 0.25f;
 	[SerializeField]
-	private float punchDistance;
-	[SerializeField]
-	private float punchStartup;
-	[SerializeField]
-	private float punchRecovery;
+	private float punchRecovery = 0.25f;
 	private float punchTimer;
-	private RaycastHit2D[] punchHits;
+	//private RaycastHit2D[] punchHits;
 
 	public void OnPunching(bool rightPunch) // from the buttons
 	{
@@ -460,10 +480,10 @@ public class PlayerControllerFus : MonoBehaviour
 			Facing = rightPunch ? 1 : -1;
 			StartCoroutine(Punch());
 		}
-		/*else {
+		else {
             //unavaible
             // punchTimer -= Time.deltaTime; //accelerate the recovery a bit?
-        }*/
+        }
 	}
 
 	IEnumerator Punch()
@@ -474,16 +494,21 @@ public class PlayerControllerFus : MonoBehaviour
 
 		while(punchTimer > 0f) // recovery
 		{
+			punchCollider.enabled = true;
+
 			while(punchTimer > punchRecovery) // startup
 			{
 				punchTimer -= Time.deltaTime;
 				yield return null;
 			}
 
-			if(Physics2D.CircleCastNonAlloc(Position2D, punchRadius, Vector2.right * Facing, punchHits, punchDistance, punchLayer) > 0) // maybe have active frames?
+			// maybe have active frames?
+			/*if(Physics2D.CircleCastNonAlloc(Position2D, punchRadius, Vector2.right * Facing, punchHits, punchDistance, punchLayer) > 0) 
 			{
-				// IPunchable punchable punchHit.collider.GetComponent<IPunchable>();
-			}
+				//IPunchable punchable punchHit.collider.GetComponent<IPunchable>();
+			}*/
+
+			punchCollider.enabled = false;
 
 			while(punchTimer > 0f) // recovery
 			{
