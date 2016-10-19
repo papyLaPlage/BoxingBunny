@@ -1,5 +1,5 @@
-﻿public interface ITrigger {
-
-    void OnPlayerEnter(PlayerControllerFus player);
-    void OnPlayerExit(PlayerControllerFus player);
+﻿public interface ITrigger
+{
+	void OnPlayerEnter(PlayerController player);
+	void OnPlayerExit(PlayerController player);
 }

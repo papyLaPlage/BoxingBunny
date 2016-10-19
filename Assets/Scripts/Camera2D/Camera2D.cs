@@ -3,8 +3,11 @@
 //Script unique pour la camera
 public class Camera2D : MonoBehaviour
 {
+	[HideInInspector]
 	public bool IFollowA = true;
+	[HideInInspector]
 	public Point2D pointA;
+	[HideInInspector]
 	public Point2D pointB;
 
 	private Point2D point;
@@ -31,7 +34,7 @@ public class Camera2D : MonoBehaviour
 				point = pointB;
 			}
 
-			point.position = targetTransforme.transform.position;
+			point.position = targetTransforme.position;
 			point.decalage = Vector2.zero;
 
 			foreach(Camera2DLogic i in targets)
@@ -43,17 +46,21 @@ public class Camera2D : MonoBehaviour
 
 	private void Awake()
 	{
-		pointA = new Point2D();
-		pointB = new Point2D();
-
 #if UNITY_EDITOR
 		isPlay = true;
 		player = null;
 #endif
+		pointA = new Point2D();
+		pointB = new Point2D();
 	}
 
 	private void LateUpdate()
 	{
+#if UNITY_EDITOR
+		if(point == null)
+			EditorSetTarget();
+#endif
+
 		if(IFollowA)
 		{
 			foreach(Camera2DLogic i in targets)
@@ -73,37 +80,40 @@ public class Camera2D : MonoBehaviour
 			point = pointB;
 		}
 
-		/*foreach(Camera2DLogic i in targets)
-		{
-			i.UpdatePoint(ref point);
-		}*/
-
 		Vector3 nPosition = point.CameraPosition;
 		nPosition.z = transform.position.z;
 		transform.position = nPosition;
 	}
 
 #if UNITY_EDITOR
-	public bool isPlay = false;
-	Transform player;
+	private bool isPlay = false;
+	private Transform player;
+	private Vector3 playerPosition;
+
+	void EditorSetTarget()
+	{
+		pointA = new Point2D();
+		pointB = new Point2D();
+
+		player = GameObject.FindGameObjectWithTag("Player").transform;
+
+		if(player != null)
+		{
+			playerPosition = player.position;
+			SetTarget(player);
+		}
+	}
+
 	void OnDrawGizmos()
 	{
 		if(!isPlay)
 		{
-			if(player == null)
+			if(player == null || !playerPosition.Equals(player.position))
 			{
-				pointB = new Point2D();
-				pointA = new Point2D();
-
-				//point = new Point2D();
-				player = GameObject.FindGameObjectWithTag("Player").transform;
-				SetTarget(player);
+				EditorSetTarget();
 			}
-			else
-			{
-				LateUpdate();
-				//transform.position = new Vector3(player.position.x, player.position.y, transform.position.z);
-			}
+			
+			LateUpdate();
 		}
 	}
 #endif

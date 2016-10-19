@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
-
+﻿
 public enum EnumCameraLogic {
     Same,
     No,

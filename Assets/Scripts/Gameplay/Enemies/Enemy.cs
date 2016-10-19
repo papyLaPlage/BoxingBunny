@@ -234,7 +234,7 @@ public class Enemy : MonoBehaviour
 	{
 		if(co.tag == "Player")
 		{
-			co.GetComponent<PlayerControllerFus>().UpdateLife(damage);
+			co.GetComponent<PlayerController>().UpdateLife(damage);
 		}
 	}
 

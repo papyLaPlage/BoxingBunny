@@ -6,7 +6,7 @@ public class PunchTrigger : MonoBehaviour {
 	#region SETUP
 
 	Enemy enemy;
-	PlayerControllerFus player;
+	DamageObject damageObject;
 
 	void Awake()
 	{
@@ -26,13 +26,15 @@ public class PunchTrigger : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D co)
 	{
-		player = co.transform.GetComponent<PlayerControllerFus>();
-		if(player == null)
-			player = co.transform.GetComponentInParent<PlayerControllerFus>();
+		damageObject = co.transform.GetComponent<DamageObject>();
 
-		if(player != null)
+		if(damageObject != null)
 		{
-			enemy.UpdateLife(-player.punchDamage);
+			enemy.UpdateLife(-damageObject.Damage);
+			if(!enemy.alive)
+			{
+				Destroy(this);
+			}
 		}
 	}
 

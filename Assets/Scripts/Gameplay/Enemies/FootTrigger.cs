@@ -6,9 +6,10 @@ public class FootTrigger : MonoBehaviour {
 	#region SETUP
 
 	Enemy enemy;
-	PlayerControllerFus player;
+	DamageObject damageObject;
 
-	void Awake () {
+	void Awake ()
+	{
 		enemy = transform.GetComponent<Enemy>();
 		if(enemy == null)
 			enemy = transform.GetComponentInParent<Enemy>();
@@ -25,14 +26,12 @@ public class FootTrigger : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D co)
 	{
-		player = co.transform.GetComponent<PlayerControllerFus>();
-		if(player == null)
-			player = co.transform.GetComponentInParent<PlayerControllerFus>();
+		damageObject = co.transform.GetComponent<DamageObject>();
 
-		if(player != null)
+		if(damageObject != null)
 		{
-			player.AfterFootTouch();
-			enemy.UpdateLife(-player.footDamage);
+			//damageObject.AfterFootTouch();
+			enemy.UpdateLife(-damageObject.Damage);
 			if(!enemy.alive)
 			{
 				Destroy(this);

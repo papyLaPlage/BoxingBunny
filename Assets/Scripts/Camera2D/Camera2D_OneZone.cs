@@ -47,8 +47,11 @@ public class Camera2D_OneZone : Camera2DLogic
 	public override void UpdatePoint(ref Point2D point2D)
 	{
 #if UNITY_EDITOR
-		_point2D = point2D;
+		if(point2D == null)
+			return;
+
 		_transform = transform;
+		_point2D = point2D;
 #endif
 		if(plan == EnumCameraPlan.X || plan == EnumCameraPlan.XY)
 		{
