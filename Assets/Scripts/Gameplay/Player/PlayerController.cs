@@ -520,8 +520,8 @@ public class PlayerController : MonoBehaviour
 	private GameObject projetileWater;
 	[SerializeField]
 	private GameObject projetileWind;
-	[SerializeField]
-	private GameObject projetileEarth;
+	//[SerializeField]
+	//private GameObject projetileEarth;
 
 	private bool powerActivate = false;
 	private bool powerInAirActivate = false;
@@ -585,9 +585,10 @@ public class PlayerController : MonoBehaviour
 						case Power.Wind:
 							//lance tornade
 							projetile = Instantiate(projetileWind).GetComponent<Projectile>();
-							if(!_physics.IsGrounded)
+							if(!_physics.IsGrounded && !powerInAirActivate)
 							{
 								//saut vertical
+								StopJump(Vector2.up * 25);
 							}
 							break;
 						case Power.Water:
@@ -595,9 +596,10 @@ public class PlayerController : MonoBehaviour
 							projetile = Instantiate(projetileWater).GetComponent<Projectile>();
 							break;
 						case Power.Earth:
-							if(!_physics.IsGrounded && !_physics.IsSliding)
+							if(!_physics.IsGrounded && !_physics.IsSliding && !powerInAirActivate)
 							{
 								//smach vertical
+								StopJump(Vector2.down * 30);
 							}
 							break;
 					}

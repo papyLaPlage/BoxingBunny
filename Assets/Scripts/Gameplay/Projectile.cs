@@ -17,6 +17,9 @@ public class Projectile : DamageObject
 	public void GiveDirection(int facing)
 	{
 		speed.x *= facing;
+		Vector3 direct = transform.localScale;
+		direct.x *= facing;
+		transform.localScale = direct;
 	}
 
 	protected override void GetDamage()

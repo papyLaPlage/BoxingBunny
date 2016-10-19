@@ -3,12 +3,15 @@ using System.Collections;
 
 public class Lantern : MonoBehaviour, ITrigger
 {
+	[SerializeField]
 	private Power power = Power.Fire;
+	[SerializeField]
 	private bool active = true;
-	private bool hasPlayer = false;
-	private PlayerController _player;
 	[SerializeField]
 	private float refullSpeed = 100;
+
+	private bool hasPlayer = false;
+	private PlayerController _player;
 
 	#region ITrigger
 
