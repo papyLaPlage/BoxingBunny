@@ -298,7 +298,7 @@ public class PlayerController : MonoBehaviour
 	[SerializeField]
 	private float slidingSpeed;
 
-	private RaycastHit2D hitRightDown, hitLeftDown;
+	private RaycastHit2D hitRightDown, hitLeftDown, hitUp;
 
 	[Header("Jump Properties")]
 	//[SerializeField]
@@ -424,10 +424,28 @@ public class PlayerController : MonoBehaviour
 #endif
 			}
 
-			positionTargetJump += DecalJumpTarget;
+			//positionTargetJump += DecalJumpTarget;
 
-			//Calcul des paramètres du saut: hauteur et temps
+			//Calcul des paramètres du saut: hauteur
 			JumpHeight = Mathf.Clamp(Mathf.Abs(Vector2.Distance(positionTargetJump, positionBeforeJump)) * JumpYDistanceFactor, JumpMinY, JumpMaxY);
+			
+			Vector2 test = _transform.position;
+			test.y += JumpHeight + 2;
+			test.x += (positionTargetJump.x - positionBeforeJump.x) / 2;
+
+			hitUp = Physics2D.Linecast(positionBeforeJump, test, groundCastLayer);
+
+			if(hitUp.point.y != 0)
+			{
+				JumpHeight = hitUp.point.y - _transform.position.y - 0.75f;
+			}
+			else
+			{
+				positionTargetJump += DecalJumpTarget;
+			}
+			Debug.Log(JumpHeight);
+
+			//Calcul des paramètres du saut: temps
 			jumpTime = Mathf.Clamp(Mathf.Abs(Vector2.Distance(positionTargetJump, positionBeforeJump)) * TimeFactorJumpDistance, TimeJumpMin, TimeJumpMax);
 
 			_physics.IsGrounded = false;
